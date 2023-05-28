@@ -13,6 +13,10 @@ TagManager:
   - BubbleSlot
   - Bubble
   - Director
+  - Fish
+  - FishCollider
+  - LeftFish
+  - RightFish
   layers:
   - Default
   - TransparentFX
@@ -20,7 +24,7 @@ TagManager:
   - 
   - Water
   - UI
-  - 
+  - Fish
   - 
   - 
   - 
@@ -58,4 +62,10 @@ TagManager:
     locked: 0
   - name: Drag
     uniqueID: 3157479109
+    locked: 0
+  - name: Fish
+    uniqueID: 2456517513
+    locked: 0
+  - name: Top
+    uniqueID: 623491353
     locked: 0

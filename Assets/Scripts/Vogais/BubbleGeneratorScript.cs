@@ -14,7 +14,6 @@ public class BubbleGeneratorScript : MonoBehaviour
 
     [SerializeField]
     private int numberOfBubbles;
-    private GameObject bubble;
 
     [SerializeField]
     private GameObject[] lettersPrefab;

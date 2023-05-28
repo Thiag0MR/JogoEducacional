@@ -393,6 +393,64 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 69582206}
   m_CullTransparentMesh: 1
+--- !u!1 &73882222
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 73882223}
+  - component: {fileID: 73882224}
+  m_Layer: 0
+  m_Name: FishColliderLeft
+  m_TagString: FishCollider
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &73882223
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 73882222}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 158452349}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!61 &73882224
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 73882222}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &146991337
 GameObject:
   m_ObjectHideFlags: 0
@@ -508,6 +566,39 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!1 &158452348
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 158452349}
+  m_Layer: 0
+  m_Name: Colliders
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &158452349
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 158452348}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1097923980}
+  - {fileID: 73882223}
+  m_Father: {fileID: 239446826}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &239446825
 GameObject:
   m_ObjectHideFlags: 0
@@ -517,6 +608,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 239446826}
+  - component: {fileID: 239446827}
   m_Layer: 0
   m_Name: FishGenerator
   m_TagString: Untagged
@@ -535,10 +627,64 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 158452349}
+  - {fileID: 702548060}
   m_Father: {fileID: 1093278308}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &239446827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 239446825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b7fe989fb616c94a97b609b49829c27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leftOriginFishPrefab:
+  - {fileID: 7308700088440265605, guid: 53795d454ce85244eb69d12e21ab3d66, type: 3}
+  - {fileID: 8081403485025626886, guid: 83f0c98b46f60b346a54295fe0261789, type: 3}
+  - {fileID: 7993121693073180555, guid: 916749e8d6c13ae4498259c35e7cbcf2, type: 3}
+  - {fileID: 4108535068613949364, guid: 6bf86b2b2865ddd409f45080c20bfb6a, type: 3}
+  - {fileID: 8665548173031444502, guid: be8e95b6ae3149548a8ca939db4b309e, type: 3}
+  - {fileID: 2157287968346955251, guid: 72e8b6c2c12cae14a8fbf40188aa40ef, type: 3}
+  - {fileID: 1348538054199592437, guid: 7ece80d1fed8ec44d80b5185a74d2afa, type: 3}
+  - {fileID: 6288944230453061914, guid: ffd14be7fbeda9d47a47aa80ee5ad887, type: 3}
+  - {fileID: 8359549680912580940, guid: cf1d533e3c2e1a541a7e1ce92b413436, type: 3}
+  - {fileID: 7887909101334592637, guid: 352532d572651644081d82e469168945, type: 3}
+  - {fileID: 8695271094010739757, guid: 41fdcb44ac64c324db337bed20a03023, type: 3}
+  - {fileID: 3159332158553897396, guid: 9ebaf5913a40ddb4ba436533bbfd6372, type: 3}
+  - {fileID: 7903613553494497352, guid: 67b4e6b4788979442b804b611cbafabe, type: 3}
+  - {fileID: 6925604817971725049, guid: cf7e3a613861ce149b23699563f1d8d6, type: 3}
+  rightOriginFishPrefab:
+  - {fileID: 2858497001451843458, guid: 88ab4d419f0fd374da03ceaed9b25b09, type: 3}
+  - {fileID: 5075226926992853960, guid: 1c989a442e48f6f42b7e31ae7799ce40, type: 3}
+  - {fileID: 7935379282468005988, guid: 72c4ffb3605d47c4cac8f8251b481df0, type: 3}
+  - {fileID: 82831782556841139, guid: 4c617b1a5efc78149a38ebe88d640f56, type: 3}
+  - {fileID: 149322040713175638, guid: 631e40ad821a29945b5a74da08d60390, type: 3}
+  - {fileID: 8040267491353091246, guid: a97aa9d8b65a34341b34414525dd1654, type: 3}
+  - {fileID: 6618955226009223603, guid: a8b300ae7baa4ce46abf4b201d82fcf2, type: 3}
+  - {fileID: 3455724718995092960, guid: 84e7d00f4dda76d409beb0872bba8f7d, type: 3}
+  - {fileID: 6068397028830211679, guid: 03a89dbee1770b5449f69ef0b5da9f93, type: 3}
+  - {fileID: 1057656642515468404, guid: ec554af900b586f4b9cdb91afa052cbc, type: 3}
+  - {fileID: 1049546060570535397, guid: cd788993230cf124d825f82089d40f1c, type: 3}
+  - {fileID: 1144332026043155439, guid: c7356bee54459a54384f06a6c1d469d2, type: 3}
+  - {fileID: 3329797940884205149, guid: 2e9d1d436eed7a845833a442b98d4ce3, type: 3}
+  - {fileID: 3451676922857405621, guid: 8aa3bd0f11bc4374b8125861c7b3aa65, type: 3}
+  fishColliderLeft: {fileID: 73882222}
+  fishColliderRight: {fileID: 1097923979}
+  fishGroup: {fileID: 702548059}
+  fishSpeed:
+  - 100
+  - 200
+  - 300
+  - 400
+  maxPoolSize: 5
+  spawnTime: 3
 --- !u!1 &261853773
 GameObject:
   m_ObjectHideFlags: 0
@@ -7732,11 +7878,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 524725425}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.4189932, y: -0.0044015273, z: 9.929116}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1415765435}
   m_Father: {fileID: 1093278308}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -10475,6 +10622,37 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!1 &702548059
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 702548060}
+  m_Layer: 0
+  m_Name: Fishes
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &702548060
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 702548059}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 239446826}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &764257536
 GameObject:
   m_ObjectHideFlags: 0
@@ -10656,15 +10834,73 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1093278307}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.4189932, y: 0.0044015273, z: -9.929116}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 239446826}
   - {fileID: 524725426}
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1097923979
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1097923980}
+  - component: {fileID: 1097923981}
+  m_Layer: 0
+  m_Name: FishColliderRight
+  m_TagString: FishCollider
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1097923980
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1097923979}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 158452349}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!61 &1097923981
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1097923979}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &1153938939
 GameObject:
   m_ObjectHideFlags: 0
@@ -11252,8 +11488,8 @@ RectTransform:
   m_LocalScale: {x: 0.91096437, y: 0.91096437, z: 0.91096437}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_Father: {fileID: 524725426}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -11307,7 +11543,7 @@ Transform:
   - {fileID: 482784960}
   - {fileID: 1536338580}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1456290575
 GameObject:
@@ -12224,7 +12460,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1719416673
 RectTransform:
   m_ObjectHideFlags: 0
@@ -12829,7 +13065,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1977744815
 GameObject:
@@ -13092,7 +13328,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2007907858
 GameObject:
@@ -13171,7 +13407,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_AdditionalShaderChannelsFlag: 25
-  m_SortingLayerID: 0
+  m_SortingLayerID: 623491353
   m_SortingOrder: 0
   m_TargetDisplay: 0
 --- !u!224 &2007907862
@@ -13194,7 +13430,7 @@ RectTransform:
   - {fileID: 764257537}
   - {fileID: 600386089}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -13307,7 +13543,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2115443058
 MonoBehaviour:
