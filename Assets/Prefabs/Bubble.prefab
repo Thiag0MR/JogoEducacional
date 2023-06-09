@@ -140,7 +140,6 @@ MonoBehaviour:
   pickUpClip: {fileID: 8300000, guid: c682a2bc28223f34fa51f2985f805805, type: 3}
   dropClip: {fileID: 8300000, guid: d118cd7dc3c3f734c98f8c6f2051f23c, type: 3}
   rb: {fileID: 8686481886188454601}
-  director: {fileID: 0}
 --- !u!82 &8607231370779492373
 AudioSource:
   m_ObjectHideFlags: 0

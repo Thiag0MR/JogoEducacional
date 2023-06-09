@@ -3,38 +3,39 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MusicButtonScript : MonoBehaviour
+namespace Vogais
 {
-    [SerializeField]
-    private AudioSource audioSource;
-
-    [SerializeField]
-    private Sprite musicOn;
-
-    [SerializeField]
-    private Sprite musicOff;
-
-    private Image image;
-
-    // Start is called before the first frame update
-    void Start()
+    public class MusicButtonScript : MonoBehaviour
     {
-        image = GetComponent<Image>();
-    }
+        [SerializeField]
+        private AudioSource audioSource;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+        [SerializeField]
+        private Sprite musicOn;
 
-    public void PlayStopMusic() {
-        if (audioSource.isPlaying) {
-            audioSource.Pause();
-            image.sprite = musicOff;
-        } else {
-            audioSource.Play();
-            image.sprite = musicOn;
+        [SerializeField]
+        private Sprite musicOff;
+
+        private Image image;
+
+        // Start is called before the first frame update
+        void Start()
+        {
+            image = GetComponent<Image>();
+        }
+
+        public void PlayStopMusic()
+        {
+            if (audioSource.isPlaying)
+            {
+                audioSource.Pause();
+                image.sprite = musicOff;
+            }
+            else
+            {
+                audioSource.Play();
+                image.sprite = musicOn;
+            }
         }
     }
 }

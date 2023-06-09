@@ -17,6 +17,8 @@ TagManager:
   - FishCollider
   - LeftFish
   - RightFish
+  - Letter
+  - Chest
   layers:
   - Default
   - TransparentFX
@@ -25,10 +27,10 @@ TagManager:
   - Water
   - UI
   - Fish
-  - 
-  - 
-  - 
-  - 
+  - Letter
+  - Player
+  - Chest
+  - Collider
   - 
   - 
   - 
@@ -54,6 +56,12 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Fish
+    uniqueID: 2456517513
+    locked: 0
+  - name: Bubble Slot
+    uniqueID: 2212194191
+    locked: 0
   - name: Letter
     uniqueID: 2911749731
     locked: 0
@@ -62,9 +70,6 @@ TagManager:
     locked: 0
   - name: Drag
     uniqueID: 3157479109
-    locked: 0
-  - name: Fish
-    uniqueID: 2456517513
     locked: 0
   - name: Top
     uniqueID: 623491353

@@ -3,17 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class MainMenuScript : MonoBehaviour
+namespace Vogais
 {
-    public void HandlePlayButton()
+    public class MainMenuScript : MonoBehaviour
     {
-        gameObject.SetActive(false);
-        GameManagerScript.Instance.UpdateGameState(GameManagerScript.GameState.Play);
-    }
+        public void HandlePlayButton()
+        {
+            gameObject.SetActive(false);
+            GameManagerScript.Instance.UpdateGameState(GameManagerScript.GameState.Play);
+        }
 
-    public void HandleCloseButton()
-    {
-        //SceneManager.LoadScene("Menu Principal");
-        SceneManager.LoadSceneAsync("Menu Principal");
+        public void HandleCloseButton()
+        {
+            //SceneManager.LoadScene("Menu Principal");
+            SceneManager.LoadSceneAsync("Menu Principal");
+        }
     }
 }

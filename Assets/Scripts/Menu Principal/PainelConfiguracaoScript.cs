@@ -4,6 +4,11 @@ using UnityEngine;
 
 public class PainelConfiguracaoScript : MonoBehaviour
 {
+    [SerializeField]
+    private GameObject menuLogin;
+
+    [SerializeField]
+    private GameObject menus;
     public void HandleConfigButtonClick()
     {
         if (gameObject.activeSelf)
@@ -22,6 +27,8 @@ public class PainelConfiguracaoScript : MonoBehaviour
 
     public void HandleProfessorAreaClick()
     {
-
+        menuLogin.SetActive(true);
+        gameObject.SetActive(!gameObject.activeSelf);
+        menus.SetActive(false);
     }
 }
