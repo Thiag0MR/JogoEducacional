@@ -28,7 +28,7 @@ namespace Palavras
             {
                 UpdateScore();
             }
-            else if (state == GameManagerScript.GameState.Play)
+            else if (state == GameManagerScript.GameState.StartGame)
             {
                 CreateScoreUI(0);
             }

@@ -7,20 +7,24 @@ using UnityEngine.UI;
 using SimpleFileBrowser;
 using System.Collections;
 using System.Threading.Tasks;
+using System.Linq;
 
 public class PalavraControllerScript : BaseControllerScript
 {
     [SerializeField]
-    private GameObject painelAdicionarGrupo, painelDeletarGrupo;
+    private GameObject painelAdicionarGrupo, painelDeletarGrupo, painelAdvertencia, botoesPainelAdicionarGrupo;
 
     [SerializeField]
-    private Text nomeImagem;
+    private Text nomeImagemPainelAdicionarPalavra, nomeImagemPainelAdicionarGrupo;
+
+    [SerializeField]
+    protected TextMeshProUGUI mensagemResultadoOperacaoGrupoAddTxtMeshPro, mensagemResultadoOperacaoGrupoDelTxtMeshPro, mensagemNenhumGrupoCriadoTxtMeshPro;
 
     [SerializeField]
     private GameObject groupItemPrefab, groupViewContent, contentPrefab;
 
     [SerializeField]
-    private TMP_Dropdown dropdownPainelAddPalavra, dropdownPainelDeletarGrupo;
+    private TMP_Dropdown dropdownPainelAdicionarPalavra, dropdownPainelDeletarGrupo;
 
     [SerializeField]
     private TMP_InputField groupInputField;
@@ -29,89 +33,64 @@ public class PalavraControllerScript : BaseControllerScript
     private GameObject palavrasViewport;
 
     private List<Group> groupList;
-    private string imageFolder, imagePath, groupPath;
+    private string wordImageFolder, groupImageFolder, imagePath, groupPath;
 
     private new List<PalavraEntry> entryList;
 
     Dictionary<string, GameObject> groupNameToPalavraViewContent = new Dictionary<string, GameObject>();
 
     private string activeGroup;
+    private int editGroupIndex;
     private Color groupSelectedColor;
     private Color groupNotSelectedColor;
 
-    public PalavraControllerScript () : base("/Data/Palavras.txt", "/Data/Audio/Palavras/")
+    public PalavraControllerScript () : base("/Data/Palavras.txt", "/Data/Audio/Palavras/", "Digite o nome da palavra")
     {
-        this.imageFolder = "/Data/Image/Palavras/";
+        this.wordImageFolder = "/Data/Image/Palavras/";
+        this.groupImageFolder = "/Data/Image/Grupo/";
         this.groupPath =  "/Data/GrupoPalavras.txt";
         this.imagePath = null;
-        groupSelectedColor = new Color(0.000f, 0.361f, 0.776f, 0.471f);
-        groupNotSelectedColor = new Color(0.000f, 0.361f, 0.776f, 0.000f);
+        this.groupSelectedColor = new Color(0.000f, 0.361f, 0.776f, 0.471f);
+        this.groupNotSelectedColor = new Color(0.000f, 0.361f, 0.776f, 0.000f);
     }
     protected override async void Awake()
     {
-        this.imageFolder = Application.dataPath + this.imageFolder;
+        this.wordImageFolder = Application.dataPath + this.wordImageFolder;
+        this.groupImageFolder = Application.dataPath + this.groupImageFolder;
         this.groupPath = Application.dataPath + this.groupPath;
-        PalavraItemScript.OnPlayAudioButtonClick += ItemScript_OnPlayAudioButtonClick;
-        PalavraItemScript.OnDeleteButtonClick += ItemScript_OnDeleteButtonClick;
-        GroupItemScript.OnClick += GroupItemScript_OnClick;
-        this.groupList = await JsonFileManager.ReadListFromJson<Group>(this.groupPath);
+        await InitializeGroupList();
         PopulateViewGroup();
-        LoadDropdown();
         InitializeDictionary();
-        UpdateScrollview("geral");
+        ActivateGroupInTheView();
+        LoadDropdown();
         base.Awake();
+        Debug.Log("Awake PalavraController executado com sucesso!");
     }
 
-    void OnDestroy()
+    void OnEnable()
     {
-        PalavraItemScript.OnPlayAudioButtonClick -= ItemScript_OnPlayAudioButtonClick;
-        PalavraItemScript.OnDeleteButtonClick -= ItemScript_OnDeleteButtonClick;
+        PalavraItemScript.OnPlayAudioButtonClick += PalavraItemScript_OnPlayAudioButtonClick;
+        PalavraItemScript.OnDeleteButtonClick += PalavraItemScript_OnDeleteButtonClick;
+        PalavraItemScript.OnEditButtonClick += PalavraItemScript_OnEditButtonClick;
+        GroupItemScript.OnClick += GroupItemScript_OnClick;
+        TopBarScript.OnAdicionarButtonClick += TopBarScript_OnAdicionarButtonClick;
+    }
+
+    void OnDisable()
+    {
+        PalavraItemScript.OnPlayAudioButtonClick -= PalavraItemScript_OnPlayAudioButtonClick;
+        PalavraItemScript.OnDeleteButtonClick -= PalavraItemScript_OnDeleteButtonClick;
+        PalavraItemScript.OnEditButtonClick -= PalavraItemScript_OnEditButtonClick;
         GroupItemScript.OnClick -= GroupItemScript_OnClick;
-    }
-    public override async Task InicializarEntryList()
-    {
-        await Task.Delay(1000);
-        this.entryList = await JsonFileManager.ReadListFromJson<PalavraEntry>(this.filePath);       
+        TopBarScript.OnAdicionarButtonClick -= TopBarScript_OnAdicionarButtonClick;
     }
 
-    private void UpdateScrollview(string groupName)
-    {
-        groupNameToPalavraViewContent[groupName].gameObject.SetActive(true);
-        this.activeGroup = groupName;
-        Transform childTransform = this.groupViewContent.transform.Find(groupName);
-        childTransform.GetComponent<Image>().color = groupSelectedColor;
-        palavrasViewport.transform.parent
-            .GetComponent<ScrollRect>().content = groupNameToPalavraViewContent[groupName].GetComponent<RectTransform>();
-        mensagemNenhumItemAdd.gameObject.SetActive(groupNameToPalavraViewContent[groupName].transform.childCount == 0);
-        viewContent = groupNameToPalavraViewContent[groupName];
-    }
-
-    private void InitializeDictionary()
-    {
-        foreach(var group in groupList)
-        {
-            AddGroupToDictionary(group.name);
-        }
-    }
-    private void AddGroupToDictionary(string groupName)
-    {
-        groupNameToPalavraViewContent.Add(groupName, Instantiate(contentPrefab, palavrasViewport.transform, true));
-        groupNameToPalavraViewContent[groupName].gameObject.name = "Content_" + groupName;
-        groupNameToPalavraViewContent[groupName].gameObject.SetActive(false);
-    }
-    
     // Eventos
-    private async void ItemScript_OnPlayAudioButtonClick(string name)
+    private void PalavraItemScript_OnPlayAudioButtonClick(string name)
     {
-        Entry entry = this.entryList.Find(e => e.name.Equals(name));
-        AudioClip audioClip = await FileManager.LoadAudioFromDisk(audioFolder + entry.audioName);
-        if (audioSource.isPlaying)
-        {
-            audioSource.Stop();
-        }
-        audioSource.PlayOneShot(audioClip);
+        base.HandlePlayAudioButtonClickItem(entryList, name);
     }
-    private void ItemScript_OnDeleteButtonClick(string name)
+    private void PalavraItemScript_OnDeleteButtonClick(string name)
     {
         PalavraEntry entry = this.entryList.Find(e => e.name.Equals(name));
         Transform[] allChildren = GetComponentsInChildren<Transform>();
@@ -125,36 +104,105 @@ public class PalavraControllerScript : BaseControllerScript
             }
         }
         RemoveEntry(entry);
+        Debug.Log("Palavra removida com sucesso!");
+    }
+    private void PalavraItemScript_OnEditButtonClick(string name)
+    {
+        PalavraEntry entry = this.entryList.Find(e => e.name.Equals(name));
+        if (entry != null)
+        {
+            PreencherCamposPainelAdicionar(entry);
+            base.AtivarBotaoEditar();
+            painelAdicionar.SetActive(true);
+            editEntryIndex = this.entryList.IndexOf(entry);
+        }
     }
     private void GroupItemScript_OnClick(string groupName)
     {
         groupNameToPalavraViewContent[activeGroup].gameObject.SetActive(false);
-        this.groupViewContent.transform.Find(activeGroup).GetComponent<Image>().color = groupNotSelectedColor;
+        groupViewContent.transform.Find(activeGroup).GetComponent<Image>().color = groupNotSelectedColor;
         groupNameToPalavraViewContent[groupName].gameObject.SetActive(true);
-        this.activeGroup = groupName;
-        this.groupViewContent.transform.Find(groupName).GetComponent<Image>().color = groupSelectedColor;
-        mensagemNenhumItemAdd.gameObject.SetActive(groupNameToPalavraViewContent[groupName].transform.childCount == 0);
+        activeGroup = groupName;
+        groupViewContent.transform.Find(groupName).GetComponent<Image>().color = groupSelectedColor;
+        viewContent = groupNameToPalavraViewContent[groupName];
+        palavrasViewport.transform.parent
+            .GetComponent<ScrollRect>().content = groupNameToPalavraViewContent[groupName].GetComponent<RectTransform>();
+        mensagemNenhumItemAddTxtMeshPro.gameObject.SetActive(groupNameToPalavraViewContent[groupName].transform.childCount == 0);
+    }
+    private void TopBarScript_OnAdicionarButtonClick()
+    {
+        if (groupList != null && groupList.Count != 0)
+        {
+            SetDropdownValue(dropdownPainelAdicionarPalavra, activeGroup);
+            base.AtivarBotaoSalvar();
+            painelAdicionar.gameObject.SetActive(true);
+        } 
+        else
+        {
+            painelAdvertencia.gameObject.SetActive(true);
+        }
+    }
+
+    // Relacionado a inicialização
+    private async Task InitializeGroupList()
+    {
+        this.groupList = await JsonFileManager.ReadListFromJson<Group>(this.groupPath);
+        if (this.groupList == null || this.groupList.Count == 0)
+        {
+            mensagemNenhumGrupoCriadoTxtMeshPro.gameObject.SetActive(true);
+            mensagemNenhumItemAddTxtMeshPro.gameObject.SetActive(true);
+            Debug.Log("Nenhum grupo criado!");
+        } else
+        {
+            mensagemNenhumGrupoCriadoTxtMeshPro.gameObject.SetActive(false);
+        }
+    }
+    public override async Task InitializeEntryList()
+    {
+        await Task.Delay(1000);
+        this.entryList = await JsonFileManager.ReadListFromJson<PalavraEntry>(this.filePath);   
+    }
+    private void InitializeDictionary()
+    {
+        if (groupList != null && groupList.Count > 0)
+        {
+            foreach(var group in groupList)
+            {
+                AddGroupToDictionary(group.name);
+            }
+            Debug.Log("Dicionário inicializado com sucesso!");
+        } else
+        {
+            Debug.Log("Dicionário não inicializado pois groupList é nulo ou está vazio!");
+        }
+    }
+    private void AddGroupToDictionary(string groupName)
+    {
+        if (!groupNameToPalavraViewContent.ContainsKey(groupName))
+        {
+            groupNameToPalavraViewContent.Add(groupName, Instantiate(contentPrefab, palavrasViewport.transform, false));
+            groupNameToPalavraViewContent[groupName].gameObject.name = "Content_" + groupName;
+            groupNameToPalavraViewContent[groupName].gameObject.SetActive(false);
+        }
     }
 
     // Relacionado ao painel adicionar palavra
 
-    public override void HandleSalvarButtonClick()
+    public override void HandleSalvarButtonClickPainelAdicionar()
     {
-        string name = nomeInputField.text.ToLower();
+        string name = nomeInputFieldPainelAdicionar.text.ToLower();
 
-        if (!name.Equals("") && audioPath != null && imagePath != null)
+        if (!name.Equals("") && audioPath != null && imagePath != null && dropdownPainelDeletarGrupo.options.Count > 0)
         {
             try
             {
                 FileInfo audioInfo = new FileInfo(audioPath);
                 FileInfo imageInfo = new FileInfo(imagePath);
-                string audioName = audioInfo.Name;
-                string imageName = imageInfo.Name;
                 string newAudioName = name.Trim() + audioInfo.Extension;
                 string newImageName = name.Trim() + imageInfo.Extension;
                 string newAudioPath = audioFolder + newAudioName;
-                string newImagePath = imageFolder + newImageName;
-                string groupName = dropdownPainelAddPalavra.options[dropdownPainelAddPalavra.value].text;
+                string newImagePath = wordImageFolder + newImageName;
+                string groupName = dropdownPainelAdicionarPalavra.options[dropdownPainelAdicionarPalavra.value].text;
                 PalavraEntry entry = new PalavraEntry (name.Trim(), newAudioName, newImageName, groupName);
                 if (this.entryList == null)
                 {
@@ -162,9 +210,10 @@ public class PalavraControllerScript : BaseControllerScript
                 }
                 if (!this.entryList.Contains(entry))
                 {
-                    this.entryList.Add(entry);
-                    AddEntry(newAudioPath, newImagePath);
+                    AddEntry(entry, newAudioPath, newImagePath);
                     AddGameObjectToView(entry, groupNameToPalavraViewContent[groupName]);
+                    Debug.Log("Palavra adicionada com sucesso!");
+                    base.MostrarResultadoDaOperacao("Palavra adicionada com sucesso!");
                 }
             } catch (Exception ex)
             {
@@ -172,37 +221,84 @@ public class PalavraControllerScript : BaseControllerScript
             }
         }
     }
-    private void AddEntry(string newAudioPath, string newImagePath)
+    public async override void HandleEditarButtonClickPainelAdicionar()
     {
-        base.AddEntry<PalavraEntry>(entryList, newAudioPath);
-        FileManager.CopyFile(imagePath, newImagePath);
-        this.imagePath = null;
-        this.nomeImagem.text = "";
-    }
+        string newName = nomeInputFieldPainelAdicionar.text.ToLower();
 
-    private void RemoveEntry (PalavraEntry entry)
-    {
-        this.entryList.Remove(entry);
-        FileManager.DeleteFile(audioFolder + entry.audioName);
-        FileManager.DeleteFile(imageFolder + entry.imageName);
-        JsonFileManager.SaveListToJson<PalavraEntry>(entryList, filePath);
-    }
-
-    private void RemoveAllEntryByGroupName(string groupName)
-    {
-        for (int i = entryList.Count - 1; i >= 0; i--)
+        if (!newName.Equals("") && audioPath != null && imagePath != null)
         {
-            if (entryList[i].groupName == groupName)
+            try
             {
-                FileManager.DeleteFile(audioFolder + entryList[i].audioName);
-                FileManager.DeleteFile(imageFolder + entryList[i].imageName);
-                entryList.RemoveAt(i);
-            }
-        }
-        JsonFileManager.SaveListToJson<PalavraEntry>(entryList, filePath);
-    }
+                PalavraEntry oldEntry = this.entryList[editEntryIndex];
+                string oldName = oldEntry.name;
+                GameObject obj = viewContent.transform.Find(oldName).gameObject;
+                if (!oldName.Equals(newName))
+                {
+                    if(this.entryList.Find(entry => entry.name.Equals(newName)) != null) {
+                        Debug.Log("Já existe outra palavra com o mesmo nome!");
+                        base.MostrarResultadoDaOperacao("Já existe outra palavra com o mesmo nome!");
+                        return;
+                    }
+                    oldEntry.name = newName;
+                    obj.GetComponentInChildren<TextMeshProUGUI>().text = newName;
+                    obj.name = newName;
 
-    public void HandleAdicionarImagemButtonClick()
+                    // Renomear o audio e a imagem, além disso, editar a entrada na lista
+                    FileInfo audioInfo = new FileInfo(audioFolder + oldEntry.audioName);
+                    string newAudioName = newName.Trim() + audioInfo.Extension;
+                    string newAudioPath = audioFolder + newAudioName;
+                    FileManager.RenameFile(audioFolder + oldEntry.audioName, newAudioPath);
+                    if (audioPath.Equals(audioFolder + oldEntry.audioName)) audioPath = audioFolder + newAudioName;
+                    oldEntry.audioName = newAudioName;
+
+                    FileInfo imageInfo = new FileInfo(wordImageFolder + oldEntry.imageName);
+                    string newImageName = newName.Trim() + imageInfo.Extension;
+                    string newImagePath = wordImageFolder + newImageName;
+                    FileManager.RenameFile(wordImageFolder + oldEntry.imageName, newImagePath);
+                    if (imagePath.Equals(wordImageFolder + oldEntry.imageName)) imagePath = wordImageFolder + newImageName;
+                    oldEntry.imageName = newImageName;
+                }
+                string oldGroupName = oldEntry.groupName;
+                string newGroupName = dropdownPainelAdicionarPalavra.options[dropdownPainelAdicionarPalavra.value].text;
+                if (!oldGroupName.Equals(newGroupName))
+                {
+                    oldEntry.groupName = newGroupName;
+                    obj.transform.SetParent(groupNameToPalavraViewContent[newGroupName].transform);
+                }
+                string oldAudioPath = audioFolder + oldEntry.audioName;
+                if (!audioPath.Equals(oldAudioPath))
+                {
+                    FileInfo audioInfo = new FileInfo(audioPath);
+                    string newAudioName = newName.Trim() + audioInfo.Extension;
+                    string newAudioPath = audioFolder + newAudioName;
+                    oldEntry.audioName = newAudioName;
+                    FileManager.DeleteFile(oldAudioPath);
+                    FileManager.CopyFile(audioPath, newAudioPath);
+                }
+                string oldImagePath = wordImageFolder + oldEntry.imageName;
+                if (!imagePath.Equals(oldImagePath))
+                {
+                    FileInfo imageInfo = new FileInfo(imagePath);
+                    string newImageName = newName.Trim() + imageInfo.Extension;
+                    string newImagePath = wordImageFolder + newImageName;
+                    oldEntry.imageName = newImageName;
+                    FileManager.DeleteFile(oldImagePath);
+                    FileManager.CopyFile(imagePath, newImagePath);
+
+                    Texture2D texture = await FileManager.LoadImageFromDisk(newImagePath);
+                    obj.GetComponentInChildren<RawImage>().texture = texture;
+                }
+                JsonFileManager.SaveListToJson(entryList, filePath);
+                Debug.Log("Palavra editada com sucesso!");
+                base.MostrarResultadoDaOperacao("Palavra editada com sucesso!");
+                LimparCamposPainelAdicionar();
+            } catch(Exception ex)
+            {
+                Debug.LogError(ex.Message);
+            } 
+        }
+    }
+    public void HandleEscolherImagemButtonClickPainelAdicionar()
     {
         // https://github.com/yasirkula/UnitySimpleFileBrowser
         FileBrowser.SetFilters(true, new FileBrowser.Filter("Images", ".jpg", ".png"));
@@ -220,81 +316,288 @@ public class PalavraControllerScript : BaseControllerScript
         {
             this.imagePath = FileBrowser.Result[0];
             FileInfo imageInfo = new(imagePath);
-            this.nomeImagem.text = imageInfo.Name;
+            this.nomeImagemPainelAdicionarPalavra.text = imageInfo.Name;
+            this.nomeImagemPainelAdicionarGrupo.text = imageInfo.Name;
+        }
+    }
+    private void AddEntry(PalavraEntry entry, string newAudioPath, string newImagePath)
+    {
+        AddEntry(entryList, entry, newAudioPath);
+        FileManager.CopyFile(imagePath, newImagePath);
+        imagePath = null;
+        nomeImagemPainelAdicionarPalavra.text = "";
+    }
+
+    private void RemoveEntry (PalavraEntry entry)
+    {
+        entryList.Remove(entry);
+        FileManager.DeleteFile(audioFolder + entry.audioName);
+        FileManager.DeleteFile(wordImageFolder + entry.imageName);
+        JsonFileManager.SaveListToJson<PalavraEntry>(entryList, filePath);
+    }
+
+    private void RemoveAllEntryByGroupName(string groupName)
+    {
+        if (entryList != null)
+        {
+            for (int i = entryList.Count - 1; i >= 0; i--)
+            {
+                if (entryList[i].groupName == groupName)
+                {
+                    FileManager.DeleteFile(audioFolder + entryList[i].audioName);
+                    FileManager.DeleteFile(wordImageFolder + entryList[i].imageName);
+                    entryList.RemoveAt(i);
+                }
+            }
+            JsonFileManager.SaveListToJson<PalavraEntry>(entryList, filePath);
         }
     }
 
-    // Relacionado ao painel adicionar e deletar grupo
+    public override void PreencherCamposPainelAdicionar(Entry entry)
+    {
+        base.PreencherCamposPainelAdicionar(entry);
+        nomeImagemPainelAdicionarPalavra.text = ((PalavraEntry)entry).imageName;
+        imagePath = wordImageFolder + ((PalavraEntry)entry).imageName;
+        if (dropdownPainelAdicionarPalavra.options.Count > 1)
+        {
+            dropdownPainelAdicionarPalavra.value = FindDropdownIndex(activeGroup);
+        }
+    }
+
+    private int FindDropdownIndex(string activeGroup)
+    {
+        for (int i = 0; i < dropdownPainelAdicionarPalavra.options.Count; i++)
+        {
+            if (dropdownPainelAdicionarPalavra.options[i].text.Equals(activeGroup))
+            {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    public override void LimparCamposPainelAdicionar()
+    {
+        base.LimparCamposPainelAdicionar();
+        this.nomeImagemPainelAdicionarPalavra.text = "";
+        this.nomeImagemPainelAdicionarGrupo.text = "";
+        //this.dropdownPainelAdicionarPalavra.value = 0;
+    }
+    private async void MostrarResultadoDaOperacaoGrupoAdd(string mensagem)
+    {
+        this.mensagemResultadoOperacaoGrupoAddTxtMeshPro.text = mensagem;
+        await Task.Delay(2000);
+        this.mensagemResultadoOperacaoGrupoAddTxtMeshPro.text = "";
+    }
+    private async void MostrarResultadoDaOperacaoGrupoDel(string mensagem)
+    {
+        this.mensagemResultadoOperacaoGrupoDelTxtMeshPro.text = mensagem;
+        await Task.Delay(2000);
+        this.mensagemResultadoOperacaoGrupoDelTxtMeshPro.text = "";
+    }
+
+
+    // Relacionado ao painel adicionar, editar e deletar grupo
+
     public void HandleAdicionarGrupoButtonClick()
     {
+        AtivarBotaoSalvarPainelAdicionarGrupo();
         painelAdicionarGrupo.SetActive(true);
     }
     public void HandleDeletarGrupoButtonClick()
     {
+        SetDropdownValue(dropdownPainelDeletarGrupo, activeGroup);
         painelDeletarGrupo.SetActive(true);
     }
-    public void HandleFecharPainelGrupoButtonClick()
+    public void HandleEditarGrupoButtonClick()
+    {
+        Group group = groupList.Find(e => e.name.Equals(activeGroup));
+        if (group != null)
+        {
+            PreencherCamposPainelAdicionarGrupo(group);
+            AtivarBotaoEditarPainelAdicionarGrupo();
+            painelAdicionarGrupo.SetActive(true);
+            editGroupIndex = groupList.IndexOf(group);
+        }
+    }
+    private void AtivarBotaoSalvarPainelAdicionarGrupo()
+    {
+        this.botoesPainelAdicionarGrupo.transform.Find("Salvar").gameObject.SetActive(true);
+        this.botoesPainelAdicionarGrupo.transform.Find("Editar").gameObject.SetActive(false);
+    }
+    protected void AtivarBotaoEditarPainelAdicionarGrupo()
+    {
+        this.botoesPainelAdicionarGrupo.transform.Find("Salvar").gameObject.SetActive(false);
+        this.botoesPainelAdicionarGrupo.transform.Find("Editar").gameObject.SetActive(true);
+    }
+    private void PreencherCamposPainelAdicionarGrupo(Group group)
+    {
+        groupInputField.text = group.name;
+        imagePath = groupImageFolder + group.imageName;
+        nomeImagemPainelAdicionarGrupo.text = group.imageName;
+    }
+    public void HandleFecharButtonClickPainelGrupo()
     {
         painelAdicionarGrupo.SetActive(false);
         painelDeletarGrupo.SetActive(false);
     }
-    public void HandleDeletarButtonClick()
+    public void HandleDeletarButtonClickPainelDeletarGrupo()
     {
-        string groupName = dropdownPainelDeletarGrupo.options[dropdownPainelDeletarGrupo.value].text;
-        RemoveGroup(groupName);
+        if (dropdownPainelDeletarGrupo.options.Count > 0)
+        {
+            string groupName = dropdownPainelDeletarGrupo.options[dropdownPainelDeletarGrupo.value].text;
+            RemoveGroup(groupName);
+        }
     }
-    public void HandleSalvarGrupoButtonClick()
+    public async void HandleEditarButtonClickPainelAdicionarGrupo()
+    {
+        string newGroupName = groupInputField.text.ToLower();
+
+        if (!newGroupName.Equals("") && imagePath != null)
+        {
+            try
+            {
+                Group oldGroup = this.groupList[editGroupIndex];
+                string oldGroupName = oldGroup.name;
+                GameObject obj = groupViewContent.transform.Find(oldGroupName).gameObject;
+                if (!oldGroupName.Equals(newGroupName))
+                {
+                    if(this.groupList.Find(entry => entry.name.Equals(newGroupName)) != null) {
+                        Debug.Log("Já existe outro grupo com o mesmo nome!");
+                        MostrarResultadoDaOperacaoGrupoAdd("Já existe outro grupo com o mesmo nome!");
+                        return;
+                    }
+                    groupNameToPalavraViewContent[oldGroup.name].name = "Content_" + newGroupName;
+                    groupNameToPalavraViewContent.Add(newGroupName, groupNameToPalavraViewContent[oldGroup.name]);
+                    groupNameToPalavraViewContent.Remove(oldGroup.name);
+                    activeGroup = newGroupName;
+                    
+                    oldGroup.name = newGroupName;
+                    obj.GetComponentInChildren<TextMeshProUGUI>().text = newGroupName;
+                    obj.name = newGroupName;
+
+                    FileInfo imageInfo = new FileInfo(groupImageFolder + oldGroup.imageName);
+                    string newImageName = newGroupName.Trim() + imageInfo.Extension;
+                    string newImagePath = groupImageFolder + newImageName;
+                    FileManager.RenameFile(groupImageFolder + oldGroup.imageName, newImagePath);
+                    if (imagePath.Equals(groupImageFolder + oldGroup.imageName)) imagePath = groupImageFolder + newImageName;
+                    oldGroup.imageName = newImageName;
+
+                    foreach(var entry in entryList) {
+                        if (entry.groupName.Equals(oldGroupName))
+                        {
+                            entry.groupName = newGroupName;
+                        }
+                    }
+                    JsonFileManager.SaveListToJson(entryList, filePath);
+                }
+                string oldImagePath = groupImageFolder + oldGroup.imageName;
+                if (!imagePath.Equals(oldImagePath))
+                {
+                    FileInfo imageInfo = new FileInfo(imagePath);
+                    string newImageName = newGroupName.Trim() + imageInfo.Extension;
+                    string newImagePath = groupImageFolder + newImageName;
+                    oldGroup.imageName = newImageName;
+                    FileManager.DeleteFile(oldImagePath);
+                    FileManager.CopyFile(imagePath, newImagePath);
+
+                    Texture2D texture = await FileManager.LoadImageFromDisk(newImagePath);
+                    obj.GetComponentInChildren<RawImage>().texture = texture;
+                }
+                JsonFileManager.SaveListToJson(groupList, groupPath);
+                Debug.Log("Grupo editado com sucesso!");
+                MostrarResultadoDaOperacaoGrupoAdd("Grupo editado com sucesso!");
+                LimparCamposPainelAdicionarGrupo();
+            } catch(Exception ex)
+            {
+                Debug.LogError(ex.Message);
+            } 
+        }
+    }
+    public void HandleSalvarButtonClickPainelAdicionarGrupo()
     {
         string name = groupInputField.text.Trim().ToLower();
-        if (!name.Equals(""))
+        if (!name.Equals("") && imagePath != null)
         {
-            Group group = new Group(name);
-            AddGroup(group);
+            FileInfo imageInfo = new FileInfo(imagePath);
+            string newImageName = name.Trim() + imageInfo.Extension;
+            string newImagePath = groupImageFolder + newImageName;
+            Group group = new Group(name, newImageName);
+            if (groupList == null)
+            {
+                groupList = new List<Group>();
+            }
+            if (!groupList.Contains(group))
+            {
+                AddGroup(group, newImagePath);
+                AddGroupToView(group);
+                AddGroupToDictionary(group.name);
+                LoadDropdown();
+                if (groupList.Count == 1) ActivateGroupInTheView();
+                Debug.Log("Grupo adicionado com sucesso!");
+                MostrarResultadoDaOperacaoGrupoAdd("Grupo adicionado com sucesso!");
+            }
         }
     }
-    private void AddGroup(Group group)
+    private void AddGroup(Group group, string newImagePath)
     {
-        if (groupList == null)
-        {
-            groupList = new List<Group>();
-        }
-        if (!groupList.Contains(group))
-        {
-            groupList.Add(group);
-            AddGroupToView(group.name);
-            AddGroupToDictionary(group.name);
-            JsonFileManager.SaveListToJson<Group>(groupList, groupPath);
-            groupInputField.text = "";
-            LoadDropdown();
-        }
+        groupList.Add(group);
+        JsonFileManager.SaveListToJson<Group>(groupList, groupPath);
+        FileManager.CopyFile(imagePath, newImagePath);
+        LimparCamposPainelAdicionarGrupo();
+        mensagemNenhumGrupoCriadoTxtMeshPro.gameObject.SetActive(false);
+    }
+    private void LimparCamposPainelAdicionarGrupo()
+    {
+        this.imagePath = null;
+        groupInputField.text = "";
+        nomeImagemPainelAdicionarGrupo.text = "";
+        nomeImagemPainelAdicionarPalavra.text = ""; 
     }
 
     private void RemoveGroup(string groupName)
     {
         Group group = groupList.Find(group => group.name == groupName);
-        if (group != null && groupName != "geral")
+        if (group != null)
         {
             groupList.Remove(group);
+            FileManager.DeleteFile(groupImageFolder + group.imageName);            
+            JsonFileManager.SaveListToJson<Group>(groupList, groupPath);
             RemoveGroupFromView(groupName);
             groupNameToPalavraViewContent.Remove(groupName);
-            JsonFileManager.SaveListToJson<Group>(groupList, groupPath);
             RemoveAllEntryByGroupName(groupName);
-            activeGroup = "geral";
             LoadDropdown();
+            if (groupList.Count > 0)
+            {
+                activeGroup = groupList.First().name;
+            } else
+            {
+                mensagemNenhumGrupoCriadoTxtMeshPro.gameObject.SetActive(true);
+            }
+            Debug.Log("Grupo removido com sucesso!");
+            MostrarResultadoDaOperacaoGrupoDel("Grupo removido com sucesso!");
         }
+    }
+
+    // Relacionado ao painel de advertência
+
+    public void HandleOkButtonClickPaineAdvertencia()
+    {
+        painelAdvertencia.gameObject.SetActive(false);
     }
 
     // Métodos usados para popular a interface
     public override void PopulateView()
     {
-        if (groupList != null && entryList != null)
+        if (groupList != null && groupList.Count > 0 && entryList != null && entryList.Count > 0)
         {
             for (int i = 0; i < entryList.Count; i++)
             {
                 PalavraEntry entry = entryList[i];
                 AddGameObjectToView(entry, groupNameToPalavraViewContent[entry.groupName]);
             }
-            mensagemNenhumItemAdd.gameObject.SetActive(groupNameToPalavraViewContent["geral"].transform.childCount == 0);
+            mensagemNenhumItemAddTxtMeshPro.gameObject.SetActive(
+                groupNameToPalavraViewContent[groupList.First().name].transform.childCount == 0);
         }
     }
     private async void AddGameObjectToView(PalavraEntry entry, GameObject contentGroup)
@@ -302,29 +605,36 @@ public class PalavraControllerScript : BaseControllerScript
         GameObject obj = Instantiate(itemPrefab, contentGroup.transform, false);
         obj.GetComponentInChildren<TextMeshProUGUI>().text = entry.name;
         obj.name = entry.name;
-        Texture2D texture = await FileManager.LoadImageFromDisk(imageFolder + entry.imageName);
+        Texture2D texture = await FileManager.LoadImageFromDisk(wordImageFolder + entry.imageName);
         obj.GetComponentInChildren<RawImage>().texture = texture;
     }
 
     private void PopulateViewGroup()
     {
-        if (groupList != null)
+        if (groupList != null && groupList.Count > 0)
         {
             for (int i = 0; i < groupList.Count; i++)
             {
-                AddGroupToView(groupList[i].name);
+                // Se o grupo não estiver na view
+                if (groupViewContent.transform.Find(groupList[i].name) == null)
+                {
+                    AddGroupToView(groupList[i]);
+                }
             }
+            Debug.Log("View group populada com sucesso!");
         } else
         {
-            AddGroup(new Group("geral"));
+            Debug.Log("View group não populada pois groupList é nulo ou está vazio!");
         }
     }
     
-    private void AddGroupToView(string groupName)
+    private async void AddGroupToView(Group group)
     {
         GameObject obj = Instantiate(groupItemPrefab, groupViewContent.transform, false);
-        obj.GetComponentInChildren<TextMeshProUGUI>().text = groupName;
-        obj.name = groupName;
+        obj.GetComponentInChildren<TextMeshProUGUI>().text = group.name;
+        obj.name = group.name;
+        Texture2D texture = await FileManager.LoadImageFromDisk(groupImageFolder + group.imageName);
+        obj.GetComponentInChildren<RawImage>().texture = texture;
     }
 
     private void RemoveGroupFromView(string groupName)
@@ -335,18 +645,57 @@ public class PalavraControllerScript : BaseControllerScript
         Destroy(groupItemTransform.gameObject);
     }
 
-    // Método usado para carregar o dropdownPainelAddPalavra com os grupos disponíveis
+    // Métodos relacionados a atualização dos componentes
+
+    // Método usado para carregar o dropdownPainelAdicionarPalavra e ...DeletarGrupo com os grupos disponíveis
     private void LoadDropdown()
     {
-        dropdownPainelAddPalavra.ClearOptions();
-        dropdownPainelDeletarGrupo.ClearOptions();
-        foreach(var group in this.groupList) {
-            var optionData = new TMP_Dropdown.OptionData();
-            optionData.text = group.name;
-            dropdownPainelAddPalavra.options.Add(optionData);
-            if (group.name != "geral") dropdownPainelDeletarGrupo.options.Add(optionData);
-            dropdownPainelAddPalavra.value = 0;
+        if (groupList != null && groupList.Count > 0)
+        {
+            dropdownPainelAdicionarPalavra.ClearOptions();
+            dropdownPainelDeletarGrupo.ClearOptions();
+            foreach(var group in this.groupList) {
+                var optionData = new TMP_Dropdown.OptionData();
+                optionData.text = group.name;
+                dropdownPainelAdicionarPalavra.options.Add(optionData);
+                dropdownPainelDeletarGrupo.options.Add(optionData);
+            }
+            dropdownPainelAdicionarPalavra.value = 0;
             dropdownPainelDeletarGrupo.value = 0;
+            Debug.Log("Dropdown carregado com sucesso!");
+        } else
+        {
+            Debug.Log("Dropdown não carregado pois não existe grupo criado!");
+        }
+    }
+    private void SetDropdownValue(TMP_Dropdown dropdown, string groupName)
+    {
+        for (int i = 0; i < dropdown.options.Count; i++)
+        {
+            if (dropdown.options[i].text.Equals(groupName))
+            {
+                dropdown.value = i;
+                break;
+            }
+        }
+    }
+    private void ActivateGroupInTheView()
+    {
+        if (groupList != null && groupList.Count > 0)
+        {
+            string groupName = groupList.First().name;
+            groupNameToPalavraViewContent[groupName].gameObject.SetActive(true);
+            this.activeGroup = groupName;
+            Transform childTransform = this.groupViewContent.transform.Find(groupName);
+            childTransform.GetComponent<Image>().color = groupSelectedColor;
+            palavrasViewport.transform.parent
+                .GetComponent<ScrollRect>().content = groupNameToPalavraViewContent[groupName].GetComponent<RectTransform>();
+            mensagemNenhumItemAddTxtMeshPro.gameObject.SetActive(groupNameToPalavraViewContent[groupName].transform.childCount == 0);
+            viewContent = groupNameToPalavraViewContent[groupName];
+            Debug.Log("Scrollview atualizada com sucesso!");
+        } else
+        {
+            Debug.Log("Scrollview não atualizada pois não existe grupo criado!");
         }
     }
 }

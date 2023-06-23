@@ -10,31 +10,20 @@ namespace Palavras
         [SerializeField]
         private AudioSource audioSource;
 
-        [SerializeField]
-        private Sprite musicOn;
-
-        [SerializeField]
-        private Sprite musicOff;
-
-        private Image image;
-
-        // Start is called before the first frame update
-        void Start()
-        {
-            image = GetComponent<Image>();
-        }
-
+        
         public void PlayStopMusic()
         {
             if (audioSource.isPlaying)
             {
                 audioSource.Pause();
-                image.sprite = musicOff;
+                gameObject.transform.GetChild(0).transform.gameObject.SetActive(false);
+                gameObject.transform.GetChild(1).transform.gameObject.SetActive(true);
             }
             else
             {
                 audioSource.Play();
-                image.sprite = musicOn;
+                gameObject.transform.GetChild(0).transform.gameObject.SetActive(true);
+                gameObject.transform.GetChild(1).transform.gameObject.SetActive(false);
             }
         }
     }

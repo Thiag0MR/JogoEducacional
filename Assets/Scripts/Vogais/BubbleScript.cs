@@ -10,8 +10,12 @@ namespace Vogais
     {
         private AudioSource audioSource;
 
+        private GameObject gameManager;
+        private GameManagerScript gameManagerScript;
+
         [SerializeField]
         private AudioClip pickUpClip;
+
         [SerializeField]
         private AudioClip dropClip;
 
@@ -22,17 +26,15 @@ namespace Vogais
 
         private Vector2 mousePosition, originalPosition, offSet;
 
-        Dictionary<string, int> vogalPosition = new Dictionary<string, int> {
-            {"A", 0},
-            {"E", 1},
-            {"I", 2},
-            {"O", 3},
-            {"U", 4},
-        };
+        private void Awake()
+        {
+            gameManager = GameObject.FindGameObjectWithTag("GameManager").gameObject;
+            gameManagerScript = gameManager.GetComponent<GameManagerScript>();
+            audioSource = GetComponent<AudioSource>();
+        }
 
         void Start()
         {
-            audioSource = GetComponent<AudioSource>();
             originalPosition = transform.position;
         }
 
@@ -54,13 +56,16 @@ namespace Vogais
         void OnMouseDown()
         {
             dragging = true;
-            audioSource.PlayOneShot(pickUpClip);
 
             offSet = GetMousePosition() - (Vector2)transform.position;
+
+            //PlayVowel();
         }
 
         void OnMouseUp()
         {
+            if ((Vector2)transform.position == originalPosition) PlayVowelSound();
+
             transform.position = originalPosition;
 
             dragging = false;
@@ -71,17 +76,23 @@ namespace Vogais
             return Camera.main.ScreenToWorldPoint(Input.mousePosition);
         }
 
+        private void PlayVowelSound()
+        {
+            string vowelName = transform.GetChild(0).name;
+            gameManagerScript.PlayVowel(vowelName);
+        }
+
         private void OnTriggerEnter2D(Collider2D other)
         {
 
             if (other.tag == "BubbleSlot")
             {
-
+                string vowelName = transform.GetChild(0).name;
+                
                 // Calcula a distância da bolha para o slot
-                if (Vector2.Distance(this.transform.position, other.transform.position) < 3)
+                if (Vector2.Distance(this.transform.position, other.transform.position) < 3 
+                        && gameManagerScript.IsCorrectVowel(vowelName))
                 {
-
-                    audioSource.PlayOneShot(dropClip);
 
                     StartCoroutine(waitForSound(other));
                     
@@ -107,7 +118,10 @@ namespace Vogais
 
                     GameManagerScript.Instance.UpdateGameState(GameManagerScript.GameState.Victory);
 
-                    GameManagerScript.Instance.UpdateGameState(GameManagerScript.GameState.NextLetter);
+                    GameManagerScript.Instance.UpdateGameState(GameManagerScript.GameState.NextVowel);
+                } else
+                {
+                    GameManagerScript.Instance.UpdateGameState(GameManagerScript.GameState.Lose);
                 }
             }
         }

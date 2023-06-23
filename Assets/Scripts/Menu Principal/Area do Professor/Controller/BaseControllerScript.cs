@@ -12,16 +12,16 @@ using System.Threading.Tasks;
 public class BaseControllerScript : MonoBehaviour
 {
     [SerializeField]
-    protected GameObject painelAdicionar;
+    protected GameObject painelAdicionar, botoesPainelAdicionar;
 
     [SerializeField]
-    protected TMP_InputField nomeInputField;
+    protected TMP_InputField nomeInputFieldPainelAdicionar;
 
     [SerializeField]
-    protected Text nomeAudio;
+    protected Text nomeAudioPainelAdicionar;
 
     [SerializeField]
-    protected TextMeshProUGUI mensagemNenhumItemAdd;
+    protected TextMeshProUGUI nomeInputPlaceholderPainelAdicionar, mensagemNenhumItemAddTxtMeshPro, mensagemResultadoOperacaoTxtMeshPro;
 
     [SerializeField]
     protected GameObject viewContent, itemPrefab;
@@ -31,12 +31,15 @@ public class BaseControllerScript : MonoBehaviour
 
     protected AudioSource audioSource;
     protected List<Entry> entryList;
-    protected string audioPath, filePath, audioFolder;
+    protected string audioPath, filePath, audioFolder, nomePlaceholder, mensagemResultadoOperacao;
 
-    public BaseControllerScript (string filePath, string audioFolder)
+    protected int editEntryIndex;
+
+    public BaseControllerScript (string filePath, string audioFolder, string nomePlaceholder)
     {
         this.filePath = filePath;
         this.audioFolder = audioFolder;
+        this.nomePlaceholder = nomePlaceholder;
         this.audioPath = null;
     }
     protected virtual async void Awake()
@@ -44,23 +47,64 @@ public class BaseControllerScript : MonoBehaviour
         this.filePath = Application.dataPath + this.filePath;
         this.audioFolder = Application.dataPath + this.audioFolder;
         this.audioSource = gameObject.AddComponent<AudioSource>();
-        this.nomeAudio.text = "";
-        await InicializarEntryList();
+        this.nomeInputPlaceholderPainelAdicionar.text = this.nomePlaceholder;
+        this.nomeAudioPainelAdicionar.text = "";
+        await InitializeEntryList();
         PopulateView();
         spinner.gameObject.SetActive(false);
-        TopBarScript.OnAdicionarButtonClick += TopBarScript_OnAdicionarButtonClick;
+        Debug.Log("Awake BaseController executado com sucesso!");
     }
 
-    void OnDestroy()
+    void OnEnable()
+    {
+        TopBarScript.OnAdicionarButtonClick += TopBarScript_OnAdicionarButtonClick;
+        ItemScript.OnPlayAudioButtonClick += ItemScript_OnPlayAudioButtonClick;
+        ItemScript.OnEditButtonClick += ItemScript_OnEditButtonClick;
+        ItemScript.OnDeleteButtonClick += ItemScript_OnDeleteButtonClick;
+    }
+    void OnDisable()
     {
         TopBarScript.OnAdicionarButtonClick -= TopBarScript_OnAdicionarButtonClick;
+        ItemScript.OnPlayAudioButtonClick -= ItemScript_OnPlayAudioButtonClick;
+        ItemScript.OnEditButtonClick -= ItemScript_OnEditButtonClick;
+        ItemScript.OnDeleteButtonClick -= ItemScript_OnDeleteButtonClick;
     }
 
-    public virtual async Task InicializarEntryList()
+    // Relacionado aos eventos
+
+    private void ItemScript_OnDeleteButtonClick(string name)
+    {
+        HandleDeleteButtonClickItem(name);
+    }
+
+    private void ItemScript_OnEditButtonClick(string name)
+    {
+        HandleEditButtonClickItem(name);
+    }
+
+    private void ItemScript_OnPlayAudioButtonClick(string name)
+    {
+        HandlePlayAudioButtonClickItem(entryList, name);
+    }
+    private void TopBarScript_OnAdicionarButtonClick()
+    {
+        AtivarBotaoSalvar();
+        painelAdicionar.gameObject.SetActive(true);
+    }
+
+    // Relacionado a inicialização
+    public virtual async Task InitializeEntryList()
     {
         await Task.Delay(1000);
         this.entryList = await JsonFileManager.ReadListFromJson<Entry>(this.filePath);
-        mensagemNenhumItemAdd.gameObject.SetActive(entryList == null);
+        if (entryList == null || entryList.Count == 0 )
+        {
+            mensagemNenhumItemAddTxtMeshPro.gameObject.SetActive(true);
+            Debug.Log("Lista vazia");
+        } else
+        {
+            Debug.Log("Lista lida com sucesso!");
+        }
     }
 
     // Relacionado a barra de busca
@@ -70,7 +114,7 @@ public class BaseControllerScript : MonoBehaviour
         int children = viewContent.gameObject.transform.childCount;
         for (int i = 0; i < children; i++) {
             Transform child = viewContent.transform.GetChild(i);
-            if (!child.name.Equals(searchString))
+            if (!child.name.Contains(searchString))
             {
                 child.gameObject.SetActive(false);
             }
@@ -85,23 +129,19 @@ public class BaseControllerScript : MonoBehaviour
         }
     }
 
-    private void TopBarScript_OnAdicionarButtonClick()
-    {
-        painelAdicionar.gameObject.SetActive(true);
-    }
 
-    // Relacionado ao painel adicioar item (vogal, consoante, sílaba)
+
+    // Relacionado ao painel adicionar item (vogal, consoante, sílaba)
      
-    public virtual void HandleSalvarButtonClick()
+    public virtual void HandleSalvarButtonClickPainelAdicionar()
     {
-        string name = nomeInputField.text.ToLower();
+        string name = nomeInputFieldPainelAdicionar.text.ToLower();
 
         if (!name.Equals("") && audioPath != null)
         {
             try
             {
                 FileInfo audioInfo = new FileInfo(audioPath);
-                string audioName = audioInfo.Name;
                 string newAudioName = name.Trim() + audioInfo.Extension;
                 string newAudioPath = audioFolder + newAudioName;
                 Entry entry = new Entry(name.Trim(), newAudioName);
@@ -109,32 +149,85 @@ public class BaseControllerScript : MonoBehaviour
                     this.entryList = new List<Entry>();
                 if (!this.entryList.Contains(entry))
                 {
-                    this.entryList.Add(entry);
-                    AddEntry<Entry>(entryList, newAudioPath);
+                    AddEntry<Entry>(entryList, entry, newAudioPath);
                     AddGameObjectToView(entry.name);
+                    Debug.Log("Item adicionado com sucesso!");
+                    MostrarResultadoDaOperacao("Item adicionado com sucesso!");
                 }
             } catch (Exception ex)
             {
                 Debug.LogError(ex);
-            }
+            }        
         }
     }
     
-    protected void AddEntry<T>(List<T> entryList, string newAudioPath)
+    protected void AddEntry<T>(List<T> entryList, T entry, string newAudioPath)
     {
+        entryList.Add(entry);
         JsonFileManager.SaveListToJson<T>(entryList, filePath);
         FileManager.CopyFile(audioPath, newAudioPath);
-        this.audioPath = null;
-        this.nomeAudio.text = "";
-        this.nomeInputField.text = "";
-        this.mensagemNenhumItemAdd.gameObject.SetActive(false); 
+        LimparCamposPainelAdicionar();
+        this.mensagemNenhumItemAddTxtMeshPro.gameObject.SetActive(false); 
     }
-    public void HandleFecharButtonClick()
+    public virtual void HandleEditarButtonClickPainelAdicionar()
     {
-        painelAdicionar.gameObject.SetActive(false);
+        string newName = nomeInputFieldPainelAdicionar.text.ToLower();
+
+        if (!newName.Equals("") && audioPath != null)
+        {
+            try
+            {
+                Entry oldEntry = this.entryList[editEntryIndex];
+                string oldName = oldEntry.name;
+                GameObject obj = viewContent.transform.Find(oldName).gameObject;
+                if (!oldName.Equals(newName))
+                {
+                    if (this.entryList.Find(entry => entry.name.Equals(newName)) != null)
+                    {
+                        Debug.Log("Já existe outra palavra com o mesmo nome!");
+                        MostrarResultadoDaOperacao("Já existe outra palavra com o mesmo nome!");
+                        return;
+                    }
+                    oldEntry.name = newName;
+                    obj.GetComponentInChildren<TextMeshProUGUI>().text = newName;
+                    obj.name = newName;
+
+                    // Renomear o audio e a imagem, além disso, editar a entrada na lista
+                    FileInfo audioInfo = new FileInfo(audioFolder + oldEntry.audioName);
+                    string newAudioName = newName.Trim() + audioInfo.Extension;
+                    string newAudioPath = audioFolder + newAudioName;
+                    FileManager.RenameFile(audioFolder + oldEntry.audioName, newAudioPath);
+                    if (audioPath.Equals(audioFolder + oldEntry.audioName)) audioPath = audioFolder + newAudioName;
+                    oldEntry.audioName = newAudioName;
+                }
+                string oldAudioPath = audioFolder + oldEntry.audioName;
+                if (!audioPath.Equals(oldAudioPath))
+                {
+                    FileInfo audioInfo = new FileInfo(audioPath);
+                    string newAudioName = newName.Trim() + audioInfo.Extension;
+                    string newAudioPath = audioFolder + newAudioName;
+                    oldEntry.audioName = newAudioName;
+                    FileManager.DeleteFile(oldAudioPath);
+                    FileManager.CopyFile(audioPath, newAudioPath);
+                }
+                JsonFileManager.SaveListToJson(entryList, filePath);
+                Debug.Log("Palavra editada com sucesso!");
+                MostrarResultadoDaOperacao("Palavra editada com sucesso!");
+                LimparCamposPainelAdicionar();
+            } catch(Exception ex)
+            {
+                Debug.LogError(ex.Message);
+            } 
+        }
     }
     
-    public void HandleAdicionarAudioButtonClick()
+    public void HandleFecharButtonClickPainelAdicionar()
+    {
+        painelAdicionar.gameObject.SetActive(false);
+        LimparCamposPainelAdicionar();
+    }
+    
+    public void HandleEscolherAudioButtonClickPainelAdicionar()
     {
         // https://github.com/yasirkula/UnitySimpleFileBrowser
         FileBrowser.SetFilters( true, new FileBrowser.Filter( "Sounds", ".mp3", ".wav" ) );
@@ -152,24 +245,66 @@ public class BaseControllerScript : MonoBehaviour
 		{
             this.audioPath = FileBrowser.Result[0];
             FileInfo audioInfo = new(audioPath);
-            this.nomeAudio.text = audioInfo.Name;
+            this.nomeAudioPainelAdicionar.text = audioInfo.Name;
 		}
 	}
+    public virtual void PreencherCamposPainelAdicionar(Entry entry)
+    {
+        this.nomeInputFieldPainelAdicionar.text = entry.name;
+        this.nomeAudioPainelAdicionar.text = entry.audioName;
+        this.audioPath = audioFolder + entry.audioName;
+    }
+    public virtual void LimparCamposPainelAdicionar()
+    {
+        this.nomeInputFieldPainelAdicionar.text = "";
+        this.nomeAudioPainelAdicionar.text = "";
+        this.audioPath = null;
+    }
+    protected void AtivarBotaoSalvar()
+    {
+        this.botoesPainelAdicionar.transform.Find("Salvar").gameObject.SetActive(true);
+        this.botoesPainelAdicionar.transform.Find("Editar").gameObject.SetActive(false);
+    }
+    protected void AtivarBotaoEditar()
+    {
+        this.botoesPainelAdicionar.transform.Find("Salvar").gameObject.SetActive(false);
+        this.botoesPainelAdicionar.transform.Find("Editar").gameObject.SetActive(true);
+    }
+
+    protected async void MostrarResultadoDaOperacao(string mensagem)
+    {
+        this.mensagemResultadoOperacaoTxtMeshPro.text = mensagem;
+        await Task.Delay(2000);
+        this.mensagemResultadoOperacaoTxtMeshPro.text = "";
+    }
 
     // Relacionado ao item na scrollview
 
-    protected async void HandlePlayAudioButtonClick(string name)
+    protected async void HandlePlayAudioButtonClickItem<T>(List<T> entryList, string name) where T : Entry
     {
-        Entry entry = this.entryList.Find(e => e.name.Equals(name));
+        Entry entry = entryList.Find(e => e.name.Equals(name));
         AudioClip audioClip = await FileManager.LoadAudioFromDisk(audioFolder + entry.audioName);
         if (audioSource.isPlaying)
         {
             audioSource.Stop();
         }
         audioSource.PlayOneShot(audioClip);
+        Debug.Log("Play audio");
     } 
 
-    protected void HandleDeleteButtonClick(string name)
+    private void HandleEditButtonClickItem(string name) 
+    {
+        Entry entry = this.entryList.Find(e => e.name.Equals(name));
+        if (entry != null)
+        {
+            PreencherCamposPainelAdicionar(entry);
+            AtivarBotaoEditar();
+            painelAdicionar.SetActive(true);
+            editEntryIndex = this.entryList.IndexOf(entry);
+        }
+    }
+
+    private void HandleDeleteButtonClickItem(string name)
     {
         Entry entry = this.entryList.Find(e => e.name.Equals(name));
         Transform[] allChildren = GetComponentsInChildren<Transform>();
@@ -183,6 +318,7 @@ public class BaseControllerScript : MonoBehaviour
             }
         }
         RemoveEntry(entry);
+        Debug.Log("Item removido com sucesso!");
     }
     private void RemoveEntry(Entry entry)
     {
@@ -199,6 +335,7 @@ public class BaseControllerScript : MonoBehaviour
             for (int i = 0; i < entryList.Count; i++) {
                 AddGameObjectToView(entryList[i].name);
             }
+            Debug.Log("View populada com sucesso!");
         }
     }
 
@@ -207,5 +344,14 @@ public class BaseControllerScript : MonoBehaviour
         GameObject obj = Instantiate(itemPrefab, viewContent.transform, false);
         obj.GetComponentInChildren<TextMeshProUGUI>().text = name;
         obj.name = name;
+    }
+    private void EditGameObjectInView(string oldName, string newName)
+    {
+        if (!oldName.Equals(newName))
+        {
+            GameObject obj = viewContent.transform.Find(oldName).gameObject;
+            obj.GetComponentInChildren<TextMeshProUGUI>().text = newName;
+            obj.name = newName;
+        }
     }
 }

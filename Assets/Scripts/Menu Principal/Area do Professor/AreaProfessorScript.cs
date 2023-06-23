@@ -11,6 +11,9 @@ public class AreaProfessorScript : MonoBehaviour
     [SerializeField]
     private GameObject[] tabs, pages;
 
+    [SerializeField]
+    private AudioSource audioSource;
+
     private Color selectedColor, notSelectedColor;
 
     void Awake()
@@ -45,5 +48,6 @@ public class AreaProfessorScript : MonoBehaviour
         gameObject.SetActive(false);
         objetosTelaPrincipal.SetActive(true);
         objetosTelaPrincipal.transform.Find("Menus").gameObject.SetActive(true);
+        audioSource.Play();
     }
 }

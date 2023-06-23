@@ -12,7 +12,6 @@ namespace Vogais
 
         [SerializeField]
         private GameObject bubblePrefab;
-
         private GameObject[] bubbles;
 
         [SerializeField]
@@ -85,13 +84,13 @@ namespace Vogais
             // Debug.Log(boundYDown);
             // Debug.Log(boundYUp);
 
-            // Shuffle(lettersPrefab);
-            Shuffle(letters);
+            Util.Shuffle(letters);
 
             for (int i = 0; i < bubbles.Length; i++)
             {
                 bubbles[i] = Instantiate(bubblePrefab, bubbleGroup.transform) as GameObject;
                 letters[i] = Instantiate(lettersPrefab[i], bubbles[i].transform) as GameObject;
+                letters[i].name = lettersPrefab[i].name.ToLower();
                 // bubbles[i].transform.position = new Vector2(Random.Range(boundXLeft + paddingX, boundXRight - paddingX), 
                 // Random.Range(boundYDown + paddingY, boundYUp - paddingY));
                 bubbles[i].transform.position = new Vector2((boundXLeft + boundXRight) / 2, (boundYDown + boundYUp) / 2);
@@ -115,16 +114,5 @@ namespace Vogais
                 }
             }
         }
-        private void Shuffle(GameObject[] array)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                int randomIndex = Random.Range(0, array.Length);
-                GameObject temp = array[i];
-                array[i] = array[randomIndex];
-                array[randomIndex] = temp;
-            }
-        }
-
     }
 }

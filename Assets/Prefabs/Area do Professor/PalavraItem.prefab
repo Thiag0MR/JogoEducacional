@@ -18,7 +18,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &471363165245405271
 RectTransform:
   m_ObjectHideFlags: 0
@@ -34,10 +34,10 @@ RectTransform:
   m_Father: {fileID: 5456107873181576871}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 25, y: -30}
-  m_SizeDelta: {x: 50, y: 60}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1171133356268318586
 CanvasRenderer:
@@ -69,7 +69,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: a2991ec79cb38fc45a88168502c37d3a, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -120,7 +120,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8525707027767582339}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2850568859879938995}
+        m_TargetAssemblyTypeName: PalavraItemScript, Assembly-CSharp
+        m_MethodName: HandleEditButtonClick
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1660737201800548140
 GameObject:
   m_ObjectHideFlags: 0
@@ -134,7 +146,7 @@ GameObject:
   - component: {fileID: 1660737201800548129}
   - component: {fileID: 1660737201800548130}
   - component: {fileID: 7545849687143743022}
-  - component: {fileID: 4579571038676618165}
+  - component: {fileID: 2850568859879938995}
   m_Layer: 5
   m_Name: PalavraItem
   m_TagString: Untagged
@@ -159,9 +171,9 @@ RectTransform:
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 675.1, y: -72.151054}
-  m_SizeDelta: {x: 1310.2, y: 150}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: -50}
+  m_SizeDelta: {x: 0, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1660737201800548128
 CanvasRenderer:
@@ -215,9 +227,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_IgnoreLayout: 0
   m_MinWidth: -1
-  m_MinHeight: -1
+  m_MinHeight: 120
   m_PreferredWidth: -1
-  m_PreferredHeight: 100
+  m_PreferredHeight: 120
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
@@ -240,14 +252,14 @@ MonoBehaviour:
     m_Bottom: 10
   m_ChildAlignment: 3
   m_Spacing: 50
-  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 1
   m_ChildControlHeight: 0
   m_ChildScaleWidth: 1
   m_ChildScaleHeight: 1
   m_ReverseArrangement: 0
---- !u!114 &4579571038676618165
+--- !u!114 &2850568859879938995
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -580,8 +592,8 @@ MonoBehaviour:
   m_IgnoreLayout: 0
   m_MinWidth: -1
   m_MinHeight: -1
-  m_PreferredWidth: 100
-  m_PreferredHeight: 100
+  m_PreferredWidth: 80
+  m_PreferredHeight: 80
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
@@ -624,7 +636,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 100}
+  m_SizeDelta: {x: 0, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &6933121708200877201
 MonoBehaviour:
@@ -774,7 +786,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 4579571038676618165}
+      - m_Target: {fileID: 2850568859879938995}
         m_TargetAssemblyTypeName: PalavraItemScript, Assembly-CSharp
         m_MethodName: HandleDeleteButtonClick
         m_Mode: 1
@@ -929,7 +941,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 4579571038676618165}
+      - m_Target: {fileID: 2850568859879938995}
         m_TargetAssemblyTypeName: PalavraItemScript, Assembly-CSharp
         m_MethodName: HandlePlayAudioButtonClick
         m_Mode: 1

@@ -388,7 +388,7 @@ namespace UI.Pagination
         }
 
         /// <summary>
-        /// Move this page to the specified position
+        /// MovePlayer this page to the specified position
         /// (position starts at 1 for page 1)
         /// </summary>
         /// <param name="position"></param>

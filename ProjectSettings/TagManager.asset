@@ -12,18 +12,21 @@ TagManager:
   - UI Canvas
   - BubbleSlot
   - Bubble
-  - Director
   - Fish
   - FishCollider
   - LeftFish
   - RightFish
   - Letter
   - Chest
+  - GameManager
+  - Director
+  - Menus
+  - Spinner
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Top
   - Water
   - UI
   - Fish

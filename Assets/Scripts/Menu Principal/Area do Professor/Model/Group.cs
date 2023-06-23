@@ -7,10 +7,12 @@ using UnityEngine;
 public class Group : IEquatable<Group>
 {
     public string name;
+    public string imageName;
 
-    public Group(string name)
+    public Group(string name, string imageName)
     {
         this.name = name;
+        this.imageName = imageName;
     }
 
     public override bool Equals(object obj)
@@ -20,8 +22,7 @@ public class Group : IEquatable<Group>
 
     public bool Equals(Group other)
     {
-        return other is not null &&
-               name == other.name;
+        return other is not null && name == other.name;
     }
 
     public override int GetHashCode()

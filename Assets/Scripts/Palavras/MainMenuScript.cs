@@ -15,8 +15,7 @@ namespace Palavras
 
         public void HandleCloseButton()
         {
-            //SceneManager.LoadScene("Menu Principal");
-            SceneManager.LoadSceneAsync("Menu Principal");
+            SceneManagerScript.Instance.LoadScene("Menu Principal");
         }
     }
 }

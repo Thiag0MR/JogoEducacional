@@ -21,13 +21,11 @@ public class Entry : IEquatable<Entry>
 
     public bool Equals(Entry other)
     {
-        return other is not null &&
-               name == other.name &&
-               audioName == other.audioName;
+        return other is not null && name == other.name;
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(name, audioName);
+        return HashCode.Combine(name);
     }
 }

@@ -8,14 +8,18 @@ namespace Palavras
     public class LetterScript : MonoBehaviour
     {
         private Rigidbody2D rb;
+        private AudioSource audioSource;
+
         // Para fazer a rotação da letra
         private int rotate = 0;
         private bool increment = true;
         private readonly int limit = 30;
+        public bool IsFalling { get; set; } = false;
 
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
+            audioSource = GetComponent<AudioSource>();
             GameManagerScript.OnGameStateChange += GameManagerScript_OnGameStateChange;
         }
 
@@ -26,7 +30,7 @@ namespace Palavras
 
         private void GameManagerScript_OnGameStateChange(GameManagerScript.GameState state)
         {
-            if (state == GameManagerScript.GameState.Victory)
+            if (state == GameManagerScript.GameState.RightLetter)
             {
                 // Tocar som quando acerta a letra
             }
@@ -51,9 +55,15 @@ namespace Palavras
         {
             if (other.CompareTag("Chest") && Input.GetKey(KeyCode.Space))
             {
-                transform.SetParent(gameObject.transform.root, true);
+                Transform wordSpaceCanvasTransform = gameObject.transform.root.GetChild(1);
+                transform.SetParent(wordSpaceCanvasTransform, true);
+                rb.bodyType = RigidbodyType2D.Dynamic;
                 rb.gravityScale = 1;
+                IsFalling = true;
             }
+        }
+        public void PlayLetterSound() {
+            audioSource.Play();
         }
     }
 }

@@ -7,9 +7,14 @@ namespace Vogais
 {
     public class PauseMenuScript : MonoBehaviour
     {
-        public void HandleCloseButton()
+        public void HandleCloseGameButton()
         {
             SceneManager.LoadSceneAsync("Vogais");
+        }
+
+        public void HandleCloseButton()
+        {
+            gameObject.SetActive(false);
         }
     }
 }

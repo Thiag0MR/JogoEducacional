@@ -7,10 +7,10 @@ public class MenusScript : MonoBehaviour
 {
     public void HandleJogarVogal()
     {
-        SceneManager.LoadSceneAsync("Vogais");
+        SceneManagerScript.Instance.LoadScene("Vogais");
     }
     public void HandleJogarPalavras()
     {
-        SceneManager.LoadSceneAsync("Palavras");
+        SceneManagerScript.Instance.LoadScene("Palavras");
     }
 }

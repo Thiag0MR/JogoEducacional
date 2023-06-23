@@ -9,7 +9,13 @@ namespace Palavras
     {
         public void HandleCloseButton()
         {
+            GameManagerScript.Instance.UpdateGameState(GameManagerScript.GameState.EndGame);
             SceneManager.LoadSceneAsync("Palavras");
+        }
+
+        public void HandleFecharPainelButtonClick()
+        {
+            GameManagerScript.Instance.UpdateGameState(GameManagerScript.GameState.Pause);
         }
     }
 }
