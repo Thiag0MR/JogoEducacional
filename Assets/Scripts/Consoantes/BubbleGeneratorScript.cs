@@ -24,7 +24,7 @@ namespace Consoantes
 
         void Awake()
         {
-            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource = gameObject.GetComponent<AudioSource>();
             InitializeBubbleSlots();
             InitializeLetterNameToLetterPrefabDictionary();
         }

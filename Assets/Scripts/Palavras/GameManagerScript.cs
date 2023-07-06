@@ -25,7 +25,7 @@ namespace Palavras
         private Warning currentWarningToShow = Warning.NoGroupOfWords;
 
         [SerializeField]
-        private GameObject gameCanvas, mainMenu, pauseMenu, selectGroupMenu, wordVictoryMenu, wordPanel;
+        private GameObject gameCanvas, mainMenu, pauseMenu, selectGroupMenu, wordVictoryMenu, instructionMenu, wordPanel;
 
         [SerializeField]
         private GameObject warningNoGroupOfWords, warningNoWords;
@@ -142,6 +142,9 @@ namespace Palavras
                 case GameState.Warning:
                     HandleWarning();
                     break;
+                case GameState.Instructions:
+                    HandleInstructions();
+                    break;
             }
 
             OnGameStateChange?.Invoke(newState);
@@ -149,6 +152,7 @@ namespace Palavras
 
         private async void HandlePlay()
         {
+            mainMenu.SetActive(false);
             spinner.gameObject.SetActive(true);
             while (!contentFinishedLoading)
             {
@@ -210,7 +214,7 @@ namespace Palavras
             if (gameStarted)
             {
                 if (!pauseMenu.activeSelf && !selectGroupMenu.transform.GetChild(0).gameObject.activeSelf 
-                    && !wordVictoryMenu.activeSelf)
+                    && !wordVictoryMenu.activeSelf && instructionMenu.activeSelf)
                 {
                     pauseMenu.SetActive(true);
                     gameCanvas.SetActive(false);
@@ -299,10 +303,17 @@ namespace Palavras
                 }
             }
         }
-        private void PlayWordNameEffect()
+        private void HandleInstructions()
         {
-            //wordVictoryMenu.transform.GetChild(1).transform.GetChild(0).GetComponent<Image>().sprite;
-
+            if (!instructionMenu.activeSelf)
+            {
+                mainMenu.SetActive(false);
+                instructionMenu.SetActive(true);
+            } else
+            {
+                instructionMenu.SetActive(false);
+                mainMenu.SetActive(true);
+            }
         }
         public void HandleWordAudioButtonClick()
         {
