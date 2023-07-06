@@ -9,15 +9,8 @@ namespace Consoantes
     {
         public static GameManagerScript Instance;
 
-        private readonly string[] consonantsArray = { 
-            "b", "c", "d", 
-            "f", "g", "h",
-            "j", "k", "l",
-            "m", "n", "p", 
-            "q", "r", "s",
-            "t", "v", "w",
-            "x", "y", "z",
-        };
+        private string[] consonantsArray;
+
         [SerializeField]
         private BubbleGeneratorScript bubbleGeneratorScript;
 
@@ -28,7 +21,7 @@ namespace Consoantes
         private ParticleSystem firewordEffect;
 
         [SerializeField]
-        private GameObject mainMenu, pauseMenu, settingsMenu, warningMenu, endGameMenu;
+        private GameObject mainMenu, pauseMenu, settingsMenu, warningMenu, endGameMenu, instructionMenu;
 
         [SerializeField]
         private Canvas gameCanvas;
@@ -37,7 +30,7 @@ namespace Consoantes
         private AudioClip rightLetterAudioClip, wrongLetterAudioClip;
 
         private readonly Dictionary<string, Letter> consonants = new();
-        private int currentConsonantIndex = 0;
+        private int currentConsonantIndex;
 
         public static event Action<int> OnGameStateChange;
 
@@ -49,6 +42,17 @@ namespace Consoantes
             audioSource = GetComponent<AudioSource>();
             settingsScript.LoadSettings();
             await LoadManager.LoadConsonants(consonants);
+            InitializeConsonantsArray(consonants);
+        }
+
+        private void InitializeConsonantsArray(Dictionary<string, Letter> consonants)
+        {
+            consonantsArray = new string[consonants.Count];
+            int index = 0;
+            foreach(KeyValuePair<string, Letter> entry in consonants)
+            {
+                consonantsArray[index++] = entry.Key.ToLower();
+            }
         }
 
         public void Update()
@@ -89,12 +93,15 @@ namespace Consoantes
                 case GameState.Warning:
                     HandleWarning();
                     break;
+                case GameState.Instructions:
+                    HandleInstructions();
+                    break;
             }
 
             OnGameStateChange?.Invoke(newState);
         }
 
-        private async void HandlePlay()
+        private void HandlePlay()
         {
             if (consonants.Count == 0)
             {
@@ -103,13 +110,15 @@ namespace Consoantes
             }
             currentConsonantIndex = -1;
             Util.Shuffle(consonantsArray);
+            mainMenu.SetActive(false);
             gameCanvas.gameObject.SetActive(true);
             UpdateGameState(GameState.NextLetter);
         }
 
         private void HandlePause()
         {
-            if (!mainMenu.activeSelf && !pauseMenu.activeSelf && !settingsMenu.activeSelf && !warningMenu.activeSelf)
+            if (!mainMenu.activeSelf && !pauseMenu.activeSelf && 
+                !settingsMenu.activeSelf && !warningMenu.activeSelf && !instructionMenu.activeSelf)
             {
                 pauseMenu.SetActive(true);
                 //fireworkEffect.gameObject.SetActive(false);
@@ -137,10 +146,7 @@ namespace Consoantes
 
         private async void HandleNextLetter()
         {
-            do
-            {
-                currentConsonantIndex++;
-            } while (currentConsonantIndex < consonantsArray.Length && !consonants.ContainsKey(consonantsArray[currentConsonantIndex]));
+            currentConsonantIndex++;
 
             if (currentConsonantIndex < consonantsArray.Length)
             {
@@ -185,6 +191,18 @@ namespace Consoantes
             } else
             {
                 warningMenu.SetActive(false);
+                mainMenu.SetActive(true);
+            }
+        }
+        private void HandleInstructions()
+        {
+            if (!instructionMenu.activeSelf)
+            {
+                mainMenu.SetActive(false);
+                instructionMenu.SetActive(true);
+            } else
+            {
+                instructionMenu.SetActive(false);
                 mainMenu.SetActive(true);
             }
         }

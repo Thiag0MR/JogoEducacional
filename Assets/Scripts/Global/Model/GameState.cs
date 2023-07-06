@@ -20,4 +20,5 @@ public static class GameState
     public const int ContentFinishedLoading = 14;
     public const int GroupOfWordsCreated = 15;
     public const int Warning = 16;
+    public const int Instructions = 17;
 }

@@ -9,7 +9,7 @@ namespace Vogais
     {
         public static GameManagerScript Instance;
 
-        private readonly string[] vowelsArray = { "a", "e", "i", "o", "u" };
+        private string[] vowelsArray;
 
         [SerializeField]
         private BubbleGeneratorScript bubbleGeneratorScript;
@@ -21,7 +21,7 @@ namespace Vogais
         private ParticleSystem fireworkEffect;
 
         [SerializeField]
-        private GameObject mainMenu, pauseMenu, settingsMenu, endGameMenu, warningMenu;
+        private GameObject mainMenu, pauseMenu, settingsMenu, endGameMenu, warningMenu, instructionMenu;
 
         [SerializeField]
         private Canvas gameCanvas;
@@ -42,6 +42,17 @@ namespace Vogais
             audioSource = GetComponent<AudioSource>();
             settingsMenuScript.LoadSettings();
             await LoadManager.LoadVowels(vowels);
+            InitializeVowelsArray(vowels);
+        }
+
+        private void InitializeVowelsArray(Dictionary<string, Letter> vowels)
+        {
+            vowelsArray = new string[vowels.Count];
+            int index = 0;
+            foreach(KeyValuePair<string, Letter> entry in vowels)
+            {
+                vowelsArray[index++] = entry.Key.ToLower();
+            }
         }
 
         public void Update()
@@ -82,6 +93,9 @@ namespace Vogais
                 case GameState.Warning:
                     HandleWarning();
                     break;
+                case GameState.Instructions:
+                    HandleInstructions();
+                    break;
             }
 
             OnGameStateChange?.Invoke(newState);
@@ -96,6 +110,7 @@ namespace Vogais
             }
             currentVowelIndex = -1;
             Util.Shuffle(vowelsArray);
+            mainMenu.SetActive(false);
             gameCanvas.gameObject.SetActive(true);
             await bubbleGeneratorScript.GenerateBubbles(vowels);
             UpdateGameState(GameState.NextLetter);
@@ -103,7 +118,8 @@ namespace Vogais
 
         private void HandlePause()
         {
-            if (!mainMenu.activeSelf && !pauseMenu.activeSelf && !settingsMenu.activeSelf && !warningMenu.activeSelf)
+            if (!mainMenu.activeSelf && !pauseMenu.activeSelf && !settingsMenu.activeSelf && 
+                !warningMenu.activeSelf && !instructionMenu.activeSelf)
             {
                 pauseMenu.SetActive(true);
                 //fireworkEffect.gameObject.SetActive(false);
@@ -131,10 +147,7 @@ namespace Vogais
 
         private async void HandleNextLetter()
         {
-            do
-            {
-                currentVowelIndex++;
-            } while (currentVowelIndex < vowelsArray.Length && !vowels.ContainsKey(vowelsArray[currentVowelIndex]));
+            currentVowelIndex++;
 
             if (currentVowelIndex < vowelsArray.Length)
             {
@@ -175,6 +188,19 @@ namespace Vogais
             } else
             {
                 warningMenu.SetActive(false);
+                mainMenu.SetActive(true);
+            }
+        }
+
+        private void HandleInstructions()
+        {
+            if (!instructionMenu.activeSelf)
+            {
+                mainMenu.SetActive(false);
+                instructionMenu.SetActive(true);
+            } else
+            {
+                instructionMenu.SetActive(false);
                 mainMenu.SetActive(true);
             }
         }

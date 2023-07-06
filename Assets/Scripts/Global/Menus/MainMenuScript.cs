@@ -14,8 +14,12 @@ public class MainMenuScript : MonoBehaviour
     }
     public void HandlePlayButtonClick()
     {
-        gameObject.SetActive(false);
         gameManagerScript.UpdateGameState(GameState.Play);
+    }
+
+    public void HandleInstructionsButtonClick()
+    {
+        gameManagerScript.UpdateGameState(GameState.Instructions);
     }
 
     public void HandleSettingsButtonClick()

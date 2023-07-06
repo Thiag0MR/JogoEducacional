@@ -46,16 +46,19 @@ namespace Consoantes
                 bubbleSlots[i] = bubbleGroup.transform.GetChild(i).gameObject;
             }
         }
-        public async Task GenerateBubbles(Dictionary<string, Letter> consonants, string[] consonantsArray, int start)
+        public async Task GenerateBubbles( Dictionary<string, Letter> consonants, string[] consonantsArray, int start)
         {
             Util.Shuffle(bubbleSlots);
 
             await Task.Delay(100);
 
             int index = start;
-            for (int i = 0; i < bubbleSlots.Length; i++)
+            for(int i = 0; i < bubbleSlots.Length; i++)
             {
+                if (index == consonantsArray.Length) break;
+
                 string consonantName = consonantsArray[index++];
+
                 if (letterNameToLetterPrefab.ContainsKey(consonantName)) {
                     if (consonants.ContainsKey(consonantName))
                     {
