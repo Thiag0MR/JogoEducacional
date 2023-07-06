@@ -70,7 +70,7 @@ namespace UI.Pagination
             // Mouse button down, possible chance for a swipe
             if (Input.GetMouseButtonDown(0))
             {
-                // Record start time and position
+                // Record onStart time and position
                 mStartPosition = new Vector2(Input.mousePosition.x,
                                              Input.mousePosition.y);
 

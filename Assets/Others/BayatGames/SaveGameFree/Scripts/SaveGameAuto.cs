@@ -168,7 +168,7 @@ namespace BayatGames.SaveGameFree
 
 		[Tooltip ( "Save on Start()" )]
 		/// <summary>
-		/// The save on start.
+		/// The save on onStart.
 		/// </summary>
 		public bool saveOnStart;
 
@@ -209,7 +209,7 @@ namespace BayatGames.SaveGameFree
 
 		[Tooltip ( "Load on Start()" )]
 		/// <summary>
-		/// The load on start.
+		/// The load on onStart.
 		/// </summary>
 		public bool loadOnStart = true;
 

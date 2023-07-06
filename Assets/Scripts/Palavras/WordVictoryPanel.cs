@@ -16,6 +16,6 @@ public class WordVictoryPanel : MonoBehaviour
 
     public void HandleNextWordButtonClick()
     {
-        GameManagerScript.Instance.UpdateGameState(GameManagerScript.GameState.NextWord);
+        GameManagerScript.Instance.UpdateGameState(GameState.NextWord);
     }
 }

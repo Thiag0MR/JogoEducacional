@@ -22,13 +22,13 @@ namespace Palavras
             GameManagerScript.OnGameStateChange -= GameManagerScript_OnGameStateChange;
         }
 
-        private void GameManagerScript_OnGameStateChange(GameManagerScript.GameState state)
+        private void GameManagerScript_OnGameStateChange(int state)
         {
-            if (state == GameManagerScript.GameState.Score)
+            if (state == GameState.Score)
             {
                 UpdateScore();
             }
-            else if (state == GameManagerScript.GameState.StartGame)
+            else if (state == GameState.StartGame)
             {
                 CreateScoreUI(0);
             }

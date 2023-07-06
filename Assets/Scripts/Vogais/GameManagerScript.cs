@@ -5,64 +5,43 @@ using UnityEngine;
 
 namespace Vogais
 {
-    public class GameManagerScript : MonoBehaviour
+    public class GameManagerScript : MonoBehaviour, IGameManager
     {
         public static GameManagerScript Instance;
 
+        private readonly string[] vowelsArray = { "a", "e", "i", "o", "u" };
+
         [SerializeField]
-        private GameObject textToSpeech;
-        private TextToSpeechScript textToSpeechScript;
+        private BubbleGeneratorScript bubbleGeneratorScript;
 
-        private String[] vowelsArray = { "a", "e", "i", "o", "u" };
+        [SerializeField]
+        private SettingsMenuScript settingsMenuScript;
 
-        /*
-        private String[] victoryPhrases =
-        {
-            "Muito bem",
-            "Isso mesmo",
-            "Parabéns",
-            "Ótimo",
-            "Demais",
-            "Você está indo muito bem",
-            "Você acertou"
-        };
-        */
+        [SerializeField]
+        private ParticleSystem fireworkEffect;
 
-        private Dictionary<string, Letter> vowels = new Dictionary<string, Letter>();
+        [SerializeField]
+        private GameObject mainMenu, pauseMenu, settingsMenu, endGameMenu, warningMenu;
+
+        [SerializeField]
+        private Canvas gameCanvas;
+
+        [SerializeField]
+        private AudioClip rightLetterAudioClip, wrongLetterAudioClip;
+
+        private readonly Dictionary<string, Letter> vowels = new();
         private int currentVowelIndex = 0;
 
-        public enum GameState
-        {
-            Play,
-            Pause,
-            Score,
-            NextVowel,
-            Victory,
-            Lose,
-            GameEnd
-        }
-
-        public GameState state;
-
-        public static event Action<GameState> OnGameStateChange;
+        public static event Action<int> OnGameStateChange;
 
         private AudioSource audioSource;
 
-        [SerializeField]
-        private GameObject mainMenu;
-
-        [SerializeField]
-        private GameObject pauseMenu;
-
-        [SerializeField]
-        private GameObject bubbleSlot;
-
-        void Awake()
+        async void Awake()
         {
             Instance = this;
             audioSource = GetComponent<AudioSource>();
-            LoadManager.LoadVowels(vowels);
-            textToSpeechScript = textToSpeech.GetComponent<TextToSpeechScript>();
+            settingsMenuScript.LoadSettings();
+            await LoadManager.LoadVowels(vowels);
         }
 
         public void Update()
@@ -73,10 +52,8 @@ namespace Vogais
             }
         }
 
-        public void UpdateGameState(GameState newState)
+        public void UpdateGameState(int newState)
         {
-            state = newState;
-
             switch (newState)
             {
                 case GameState.Play:
@@ -85,18 +62,25 @@ namespace Vogais
                 case GameState.Pause:
                     HandlePause();
                     break;
+                case GameState.Settings:
+                    HandleSettings();
+                    break;
                 case GameState.Score:
                     break;
-                case GameState.NextVowel:
+                case GameState.NextLetter:
                     HandleNextLetter();
                     break;
                 case GameState.Victory:
                     HandleVictory();
                     break;
                 case GameState.Lose:
+                    HandleLose();
                     break;
-                case GameState.GameEnd:
-                    HandleGameEnd();
+                case GameState.EndGame:
+                    HandleEndGame();
+                    break;
+                case GameState.Warning:
+                    HandleWarning();
                     break;
             }
 
@@ -105,67 +89,111 @@ namespace Vogais
 
         private async void HandlePlay()
         {
+            if (vowels.Count == 0)
+            {
+                UpdateGameState(GameState.Warning);
+                return;
+            }
+            currentVowelIndex = -1;
             Util.Shuffle(vowelsArray);
-            bubbleSlot.SetActive(true);
-            await Task.Delay(1000);
-            PlayVowel(vowelsArray[currentVowelIndex]);
+            gameCanvas.gameObject.SetActive(true);
+            await bubbleGeneratorScript.GenerateBubbles(vowels);
+            UpdateGameState(GameState.NextLetter);
         }
 
-        // Como o painel de pausa inicia desativado na cena o mesmo não pode receber um evento. Sendo assim, é preciso manter uma
-        // referência para o mesmo para poder ativá-lo.
         private void HandlePause()
         {
-            if (!mainMenu.activeSelf && !pauseMenu.activeSelf)
+            if (!mainMenu.activeSelf && !pauseMenu.activeSelf && !settingsMenu.activeSelf && !warningMenu.activeSelf)
             {
                 pauseMenu.SetActive(true);
-                bubbleSlot.SetActive(false);
+                //fireworkEffect.gameObject.SetActive(false);
+                //gameCanvas.gameObject.SetActive(false);
             }
-            else
+            else if (!mainMenu.activeSelf)
             {
                 pauseMenu.SetActive(false);
-                bubbleSlot.SetActive(true);
+                //gameCanvas.gameObject.SetActive(true);
+            }
+        }
+
+        private void HandleSettings()
+        {
+            if (!settingsMenu.activeSelf)
+            {
+                mainMenu.SetActive(false);
+                settingsMenu.SetActive(true);
+            } else
+            {
+                mainMenu.SetActive(true);
+                settingsMenu.SetActive(false);
             }
         }
 
         private async void HandleNextLetter()
         {
-            currentVowelIndex++;
-            await Task.Delay(1000);
+            do
+            {
+                currentVowelIndex++;
+            } while (currentVowelIndex < vowelsArray.Length && !vowels.ContainsKey(vowelsArray[currentVowelIndex]));
+
             if (currentVowelIndex < vowelsArray.Length)
             {
-                PlayCurrentVowel();
+                await Task.Delay(1000);
+                PlaySound(vowelsArray[currentVowelIndex]);
             } else
             {
-                Instance.UpdateGameState(GameState.GameEnd);
+                Instance.UpdateGameState(GameState.EndGame);
             }
         }
 
         private void HandleVictory()
         {
-            //textToSpeechScript.Speak(victoryPhrases[UnityEngine.Random.Range(0, victoryPhrases.Length)]);
+            if (!fireworkEffect.gameObject.activeSelf)
+            {
+                fireworkEffect.gameObject.SetActive(true);
+            }
+            fireworkEffect.Play();
+            audioSource.PlayOneShot(rightLetterAudioClip, 0.2f);
+        }
+        private void HandleLose()
+        {
+            audioSource.PlayOneShot(wrongLetterAudioClip, 0.2f);
         }
 
-        private async void HandleGameEnd()
+        private void HandleEndGame()
         {
-            await Task.Delay(2000);
-            bubbleSlot.SetActive(false);
-            pauseMenu.SetActive(true);
+            gameCanvas.gameObject.SetActive(false);
+            endGameMenu.SetActive(true);
+            fireworkEffect.gameObject.SetActive(false);
         }
-        public void PlayCurrentVowel()
+
+        private void HandleWarning()
         {
-            if (currentVowelIndex < vowelsArray.Length)
-                PlayVowel(vowelsArray[currentVowelIndex]);
-        }
-        public void PlayVowel(string vowel)
-        {
-            AudioClip audioClip = vowels[vowel].audioClip;
-            if (audioSource.isPlaying)
+            if (!warningMenu.activeSelf)
             {
-                audioSource.Stop();
+                warningMenu.SetActive(true);
+            } else
+            {
+                warningMenu.SetActive(false);
+                mainMenu.SetActive(true);
             }
-            audioSource.PlayOneShot(audioClip);
         }
-        public bool IsCorrectVowel(string vowel)
+        public void PlaySound()
+        {
+            PlaySound(vowelsArray[currentVowelIndex]);
+        }
+        private void PlaySound(string letter)
+        {
+            if (vowels.ContainsKey(letter)) {
+                AudioClip audioClip = vowels[letter].audioClip;
+                if (audioSource.isPlaying)
+                {
+                    audioSource.Stop();
+                }
+                audioSource.PlayOneShot(audioClip);
+            }
+        }
+        public bool IsCorrectLetter(string vowel)
         {
             return vowel.Equals(vowelsArray[currentVowelIndex]);
         }

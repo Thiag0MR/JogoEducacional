@@ -3,7 +3,18 @@ guid: 9441a8c639528324593e44990ce3dce6
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - bubbleGeneratorScript: {instanceID: 0}
+  - settingsMenuScript: {instanceID: 0}
+  - fireworkEffect: {instanceID: 0}
+  - mainMenu: {instanceID: 0}
+  - pauseMenu: {instanceID: 0}
+  - settingsMenu: {instanceID: 0}
+  - endGameMenu: {instanceID: 0}
+  - warningMenu: {instanceID: 0}
+  - gameCanvas: {instanceID: 0}
+  - rightLetterAudioClip: {fileID: 8300000, guid: 453a42fc3dc021244b6f4baaf52c5d0e, type: 3}
+  - wrongLetterAudioClip: {fileID: 8300000, guid: 7207c1ee731f5854d93f337dd59fa8e8, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

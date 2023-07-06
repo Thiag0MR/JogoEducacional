@@ -12,7 +12,7 @@ namespace Palavras
 
         public void HandleSelecionarButtonClick()
         {
-            OnSelecionarButtonClick?.Invoke(gameObject.transform.Find("Title").GetComponent<TextMeshProUGUI>().text);
+            OnSelecionarButtonClick?.Invoke(gameObject.transform.Find("Title").GetComponent<TextMeshProUGUI>().text.ToLower());
         }
     }
 }

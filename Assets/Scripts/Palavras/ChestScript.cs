@@ -12,7 +12,6 @@ public class ChestScript : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
-
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Letter"))
@@ -35,15 +34,15 @@ public class ChestScript : MonoBehaviour
                 {
                     if (GameManagerScript.Instance.IsLetterRemaining(other.name))
                     {
-                        GameManagerScript.Instance.UpdateGameState(GameManagerScript.GameState.RightLetter);
-                        GameManagerScript.Instance.UpdateGameState(GameManagerScript.GameState.Score);
+                        GameManagerScript.Instance.UpdateGameState(GameState.RightLetter);
+                        GameManagerScript.Instance.UpdateGameState(GameState.Score);
                         GameManagerScript.Instance.UpdateWordPanel(other.name);
                         GameManagerScript.Instance.UpdateLettersRemaining(other.name);
                     }
                 } 
                 else
                 {
-                    GameManagerScript.Instance.UpdateGameState(GameManagerScript.GameState.WrongLetter);
+                    GameManagerScript.Instance.UpdateGameState(GameState.WrongLetter);
                 }
             }
         }

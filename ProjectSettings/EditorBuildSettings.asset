@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Vogais.unity
     guid: 24a76c331977e0840b64e9f4a63a9e4f
   - enabled: 1
+    path: Assets/Scenes/Consoantes.unity
+    guid: 7522d4a8e50db00449ff67a40d6e64b8
+  - enabled: 1
     path: Assets/Scenes/Palavras.unity
     guid: b9081ecac6d162642bf9485f0674e277
   m_configObjects: {}

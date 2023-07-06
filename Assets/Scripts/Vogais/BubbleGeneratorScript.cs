@@ -1,116 +1,64 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
-
 
 namespace Vogais
 {
     public class BubbleGeneratorScript : MonoBehaviour
     {
         [SerializeField]
-        private GameObject bubbleGroup;
-
-        [SerializeField]
-        private GameObject bubblePrefab;
-        private GameObject[] bubbles;
-
-        [SerializeField]
-        private int numberOfBubbles;
+        private GameObject bubbleGroup, bubblePrefab;
 
         [SerializeField]
         private GameObject[] lettersPrefab;
-        private GameObject[] letters;
-        private Vector2 screenBounds;
 
         [SerializeField]
-        private float width;
+        private AudioClip creationSound;
 
-        [SerializeField]
-        private float height;
-
-        [SerializeField]
-        private float startTileY;
+        private AudioSource audioSource;
+        private GameObject[] bubbleSlots;
 
         void Awake()
         {
-            GameManagerScript.OnGameStateChange += GameManagerScript_OnGameStateChange;
+            audioSource = gameObject.AddComponent<AudioSource>();
+            InitializeBubbleSlots();
         }
 
-        void OnDestroy()
+        private void InitializeBubbleSlots()
         {
-            GameManagerScript.OnGameStateChange -= GameManagerScript_OnGameStateChange;
-        }
+            bubbleSlots = new GameObject[bubbleGroup.transform.childCount];
 
-        private void GameManagerScript_OnGameStateChange(GameManagerScript.GameState state)
-        {
-            if (state == GameManagerScript.GameState.Play)
+            for (int i = 0; i < bubbleSlots.Length; i++)
             {
-                GenerateBubbles();
+                bubbleSlots[i] = bubbleGroup.transform.GetChild(i).gameObject;
             }
         }
-
-        private void GenerateBubbles()
+        public async Task GenerateBubbles(Dictionary<string, Letter> vowels)
         {
-            bubbles = new GameObject[numberOfBubbles];
-            letters = new GameObject[numberOfBubbles];
-            screenBounds = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, Camera.main.transform.position.z));
+            Util.Shuffle(bubbleSlots);
 
-            float paddingX = bubblePrefab.GetComponent<Renderer>().bounds.size.x / 2;
-            float paddingY = bubblePrefab.GetComponent<Renderer>().bounds.size.y / 2;
+            await Task.Delay(100);
 
-            // float screenBoundXLeft = paddingX + -screenBounds.x;
-            // float screenBoundXRight = -paddingX + screenBounds.x;
-            // float screenBoundYUp = -paddingY + screenBounds.y;
-            // float screenBoundYDown = paddingY + -screenBounds.y;
-
-            float screenBoundXLeft = -screenBounds.x;
-            float screenBoundXRight = screenBounds.x;
-            float screenBoundYUp = screenBounds.y;
-            float screenBoundYDown = -screenBounds.y;
-
-            float tileWidth = (screenBounds.x * 2) / width;
-            float tileHeight = (screenBounds.y * 2) / height;
-
-            float boundXLeft = screenBoundXLeft;
-            float boundXRight = screenBoundXLeft + tileWidth;
-            float boundYUp = screenBoundYDown + tileHeight;
-            float boundYDown = screenBoundYDown;
-
-            boundYUp += startTileY * tileHeight;
-            boundYDown += startTileY * tileHeight;
-
-            // Debug.Log(boundXLeft);
-            // Debug.Log(boundXRight);
-            // Debug.Log(boundYDown);
-            // Debug.Log(boundYUp);
-
-            Util.Shuffle(letters);
-
-            for (int i = 0; i < bubbles.Length; i++)
+            for (int i = 0; i < bubbleSlots.Length; i++)
             {
-                bubbles[i] = Instantiate(bubblePrefab, bubbleGroup.transform) as GameObject;
-                letters[i] = Instantiate(lettersPrefab[i], bubbles[i].transform) as GameObject;
-                letters[i].name = lettersPrefab[i].name.ToLower();
-                // bubbles[i].transform.position = new Vector2(Random.Range(boundXLeft + paddingX, boundXRight - paddingX), 
-                // Random.Range(boundYDown + paddingY, boundYUp - paddingY));
-                bubbles[i].transform.position = new Vector2((boundXLeft + boundXRight) / 2, (boundYDown + boundYUp) / 2);
-
-                boundXLeft = boundXRight;
-                boundXRight += tileWidth;
-
-                if (boundXRight > screenBoundXRight + 0.1)
+                string vowelName = lettersPrefab[i].name.ToLower();
+                if (vowels.ContainsKey(vowelName))
                 {
-                    boundXLeft = screenBoundXLeft;
-                    boundXRight = screenBoundXLeft + tileWidth;
+                    GameObject bubble = Instantiate(bubblePrefab, bubbleSlots[i].transform);
+                    GameObject letter = Instantiate(lettersPrefab[i], bubble.transform);
 
-                    boundYDown = boundYUp;
-                    boundYUp += tileHeight;
+                    letter.name = vowelName;
+                    letter.GetComponent<AudioSource>().clip = vowels[vowelName].audioClip;
 
-                    if (boundYUp > screenBoundYUp + 0.1)
+                    if (SettingsMenuScript.BUBBLE_CREATION_SOUND)
                     {
-                        boundYDown = screenBoundYDown;
-                        boundYUp = screenBoundYDown + tileHeight;
+                        audioSource.PlayOneShot(creationSound);
                     }
+                    await Task.Delay(500);
+                } else
+                {
+                    Debug.Log("A vogal " + vowelName + " não foi adicionada na área do professor!");
                 }
             }
         }

@@ -9,6 +9,10 @@ public class MenusScript : MonoBehaviour
     {
         SceneManagerScript.Instance.LoadScene("Vogais");
     }
+    public void HandleJogarConsoantes()
+    {
+        SceneManagerScript.Instance.LoadScene("Consoantes");
+    }
     public void HandleJogarPalavras()
     {
         SceneManagerScript.Instance.LoadScene("Palavras");

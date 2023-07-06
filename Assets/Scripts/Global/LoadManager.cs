@@ -11,12 +11,12 @@ public class LoadManager : MonoBehaviour
         string audioFolder = Application.dataPath + "/Data/Audio/Vogais/";
         List<Entry> entries = await JsonFileManager.ReadListFromJson<Entry>(filePath);
 
-        if (entries != null)
+        if (entries != null && entries.Count > 0)
         {
             foreach(var entry in entries)
             {
                 AudioClip audioClip = await FileManager.LoadAudioFromDisk(audioFolder + entry.audioName);
-                Letter vogal = new Letter(entry.name, audioClip);
+                Letter vogal = new(entry.name, audioClip);
                 vowels.Add(entry.name, vogal);
             }
             Debug.Log("Vogais carregadas com sucesso!");
@@ -32,12 +32,12 @@ public class LoadManager : MonoBehaviour
         string audioFolder = Application.dataPath + "/Data/Audio/Consoantes/";
         List<Entry> entries = await JsonFileManager.ReadListFromJson<Entry>(filePath);
 
-        if (entries != null)
+        if (entries != null && entries.Count > 0)
         {
             foreach(var entry in entries)
             {
                 AudioClip audioClip = await FileManager.LoadAudioFromDisk(audioFolder + entry.audioName);
-                Letter vogal = new Letter(entry.name, audioClip);
+                Letter vogal = new(entry.name, audioClip);
                 consonants.Add(entry.name, vogal);
             }
             Debug.Log("Consoantes carregadas com sucesso!");
@@ -54,7 +54,7 @@ public class LoadManager : MonoBehaviour
         List<PalavraEntry> entries = await JsonFileManager.ReadListFromJson<PalavraEntry>(filePath);
         List<Word> words = null;
 
-        if (entries != null)
+        if (entries != null && entries.Count > 0)
         {
             words = new List<Word>();
             foreach(var entry in entries)
@@ -64,7 +64,7 @@ public class LoadManager : MonoBehaviour
                     AudioClip audioClip = await FileManager.LoadAudioFromDisk(audioFolder + entry.audioName);
                     Texture2D texture = await FileManager.LoadImageFromDisk(imageFolder + entry.imageName);
                     Sprite image = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-                    Word word = new Word(entry.name, audioClip, image);
+                    Word word = new(entry.name, audioClip, image);
                     words.Add(word);
                 }
             }

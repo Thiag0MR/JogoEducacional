@@ -111,7 +111,7 @@ namespace UI.Pagination
                 {
                     // no page was found by this number
                     // this means a page was most likely deleted
-                    // renumber pages and start again
+                    // renumber pages and onStart again
                     PageWasDeleted(pageNumber);
 
                     return;

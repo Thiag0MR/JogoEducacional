@@ -1,6 +1,7 @@
 using Palavras;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -38,8 +39,10 @@ public class SelectGroupMenu : MonoBehaviour
                     new Rect(0, 0, texture.width, texture.height),
                     new Vector2(0.5f, 0.5f));
             }
-            GameManagerScript.Instance.UpdateGameState(GameManagerScript.GameState.GroupOfWordsCreated);
+            GameManagerScript.Instance.UpdateGameState(GameState.GroupOfWordsCreated);
             Debug.Log("Grupo de objetos criado com sucesso!");
         }
+        await Task.Delay(2000);
+        GameManagerScript.Instance.UpdateGameState(GameState.ContentFinishedLoading);
     }
 }

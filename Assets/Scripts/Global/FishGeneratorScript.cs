@@ -50,7 +50,7 @@ namespace Vogais
 
             FishScript.OnFishCollide += FishScript_OnFishCollide;
 
-            InvokeRepeating("FishGenerator", 1, spawnTime);
+            InvokeRepeating(nameof(FishGenerator), 1, spawnTime);
         }
 
         void OnDestroy()

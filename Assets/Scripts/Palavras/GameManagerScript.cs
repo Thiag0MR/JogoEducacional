@@ -2,44 +2,36 @@ using Assets.SimpleSpinner;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Palavras
 {
-    public class GameManagerScript : MonoBehaviour
+    public class GameManagerScript : MonoBehaviour, IGameManager
     {
         public static GameManagerScript Instance;
 
-        public enum GameState
-        {
-            Play,
-            StartGame,
-            EndGame,
-            Pause,
-            Score,
-            NextWord,
-            RightLetter,
-            WrongLetter,
-            WordVictory,
-            Lose, 
-            GroupOfWordsCreated
-        }
-
-        public GameState state;
-
-        public static GameState CurrentState;
-
-        public static event Action<GameState> OnGameStateChange;
+        public static event Action<int> OnGameStateChange;
 
         private AudioSource audioSource;
+        private enum Warning
+        {
+            NoGroupOfWords,
+            NoWords
+        }
+
+        private Warning currentWarningToShow = Warning.NoGroupOfWords;
 
         [SerializeField]
-        private GameObject gameCanvas, mainMenu, pauseMenu, selectGroupMenu, wordPanel, wordVictoryPanel;
+        private GameObject gameCanvas, mainMenu, pauseMenu, selectGroupMenu, wordVictoryMenu, wordPanel;
 
         [SerializeField]
-        private AudioClip wordVictoryClip;
+        private GameObject warningNoGroupOfWords, warningNoWords;
+
+        [SerializeField]
+        private AudioClip wordVictoryClip, rightLetterClip, wrongLetterClip;
 
         [SerializeField]
         private LetterGeneratorScript letterGeneratorScript;
@@ -47,25 +39,39 @@ namespace Palavras
         [SerializeField]
         private WordPanelScript wordPanelScript;
 
+        [SerializeField]
+        private SimpleSpinner spinner;
+
+        [SerializeField]
+        private ParticleSystem fireworkEffect;
+
         
         // Estado do jogo
-        private Dictionary<string, Letter> letters = new Dictionary<string, Letter>();
+        private readonly Dictionary<string, Letter> letters = new();
         private List<Word> words;
         private Word currentWord;
         private string wordNameWithoutDiacritics;
-        private int currentWordIndex = 0;
-        private bool groupOfWordsCreated = false;
-        private bool gameStarted = false;
+        private int currentWordIndex;
+        private bool groupOfWordsCreated;
+        private bool contentFinishedLoading;
+        private bool gameStarted;
         private int numberOfLettersRemaining;
         private string lettersRemaining;
 
         public async void Awake()
         {
             Instance = this;
+            audioSource = GetComponent<AudioSource>();
             GroupItemScript.OnSelecionarButtonClick += GroupItemScript_OnSelecionarButtonClick;
             await LoadManager.LoadVowels(letters);
             await LoadManager.LoadConsonants(letters);
-            audioSource = GetComponent<AudioSource>();
+        }
+        private void Start()
+        {
+            currentWordIndex = -1;
+            groupOfWordsCreated = false;
+            contentFinishedLoading = false;
+            gameStarted = false;
         }
 
         void OnDestroy()
@@ -76,8 +82,14 @@ namespace Palavras
         private async void GroupItemScript_OnSelecionarButtonClick(string groupName)
         {
             words = await LoadManager.LoadWords(groupName);
-            ShuffleWords();
-            UpdateGameState(GameState.StartGame);
+            if (words != null && words.Count > 0)
+            {
+                ShuffleWords();
+                UpdateGameState(GameState.StartGame);
+            } else
+            {
+                ShowWarning(Warning.NoWords);
+            }
         }
 
         public void Update()
@@ -88,10 +100,8 @@ namespace Palavras
             }
         }
 
-        public void UpdateGameState(GameState newState)
+        public void UpdateGameState(int newState)
         {
-            state = newState;
-
             switch (newState)
             {
                 case GameState.Play:
@@ -123,43 +133,75 @@ namespace Palavras
                     break;
                 case GameState.Lose:
                     break;
+                case GameState.ContentFinishedLoading:
+                    HandleContentFinishedLoading();
+                    break;
                 case GameState.GroupOfWordsCreated:
                     HandleGroupOfWordsCreated();
+                    break;
+                case GameState.Warning:
+                    HandleWarning();
                     break;
             }
 
             OnGameStateChange?.Invoke(newState);
         }
 
-        private void HandlePlay()
+        private async void HandlePlay()
         {
+            spinner.gameObject.SetActive(true);
+            while (!contentFinishedLoading)
+            {
+                await Task.Delay(500);
+            }
+            spinner.gameObject.SetActive(false);
+
             if (groupOfWordsCreated)
             {
                 selectGroupMenu.transform.GetChild(0).gameObject.SetActive(true);
             } 
             else
             {
-                selectGroupMenu.transform.GetChild(1).gameObject.SetActive(true);
+                ShowWarning(Warning.NoGroupOfWords);
             }
         }
 
         private void HandleStartGame()
         {
+            selectGroupMenu.transform.GetChild(0).gameObject.SetActive(false);
+            gameCanvas.SetActive(true);
+            gameStarted = true;
+            UpdateGameState(GameState.NextWord);
+        }
+        private async void HandleNextWord()
+        {
+            currentWordIndex++;
+            if (currentWordIndex > words.Count - 1)
+            {
+                Instance.UpdateGameState(GameState.EndGame);
+            }
             currentWord = words[currentWordIndex];
             numberOfLettersRemaining = CalculateNumberOfLettersRemaining(currentWord.name);
             wordNameWithoutDiacritics = Util.RemoveDiacritics(currentWord.name);
             lettersRemaining = wordNameWithoutDiacritics;
-            gameCanvas.SetActive(true);
-            selectGroupMenu.transform.GetChild(0).gameObject.SetActive(false);
-            letterGeneratorScript.GenerateLettersOnView(letters, wordNameWithoutDiacritics);
+            if (currentWordIndex != 0)
+            {
+                wordPanelScript.CleanWordPanel();
+                wordVictoryMenu.SetActive(false);
+                gameCanvas.transform.GetChild(1).Find("Player").gameObject.SetActive(true);
+            }
             wordPanelScript.GenerateWordPanel(currentWord);
-            gameStarted = true;
+            letterGeneratorScript.GenerateLettersOnView(letters, wordNameWithoutDiacritics);
+
+            await Task.Delay(1000);
+            PlayCurrentWord();
         }
 
         private void HandleEndGame()
         {
             gameStarted = false;
             gameCanvas.SetActive(false);
+            wordVictoryMenu.SetActive(false);
             mainMenu.SetActive(true);
         }
 
@@ -167,7 +209,8 @@ namespace Palavras
         {
             if (gameStarted)
             {
-                if (!pauseMenu.activeSelf)
+                if (!pauseMenu.activeSelf && !selectGroupMenu.transform.GetChild(0).gameObject.activeSelf 
+                    && !wordVictoryMenu.activeSelf)
                 {
                     pauseMenu.SetActive(true);
                     gameCanvas.SetActive(false);
@@ -183,24 +226,7 @@ namespace Palavras
         {
             // ScoreScript
         }
-        private void HandleNextWord()
-        {
-            currentWordIndex++;
-            if (currentWordIndex > words.Count - 1)
-            {
-                // Chegou no final da lista de palavras. Mostrar painel jogar novamente
-                Instance.UpdateGameState(GameState.EndGame);
-            }
-            currentWord = words[currentWordIndex];
-            numberOfLettersRemaining = CalculateNumberOfLettersRemaining(currentWord.name);
-            wordNameWithoutDiacritics = Util.RemoveDiacritics(currentWord.name);
-            lettersRemaining = wordNameWithoutDiacritics;
-            letterGeneratorScript.GenerateLettersOnView(letters, wordNameWithoutDiacritics);
-            wordPanelScript.CleanWordPanel();
-            wordPanelScript.GenerateWordPanel(currentWord);
-            wordVictoryPanel.SetActive(false);
-            gameCanvas.transform.GetChild(1).Find("Player").gameObject.SetActive(true);
-        }
+        
         private void HandleRightLetter()
         {
             numberOfLettersRemaining--;
@@ -208,37 +234,82 @@ namespace Palavras
             {
                 Instance.UpdateGameState(GameState.WordVictory);
             }
+            audioSource.PlayOneShot(rightLetterClip, 0.2f);
         }
 
         private void HandleWrongLetter()
         {
-            Debug.Log("Wrong letter");
+            audioSource.PlayOneShot(wrongLetterClip, 0.2f);
         }
-
         private void HandleWordVictory()
         {
-            wordVictoryPanel.transform.GetChild(1).transform.GetChild(0).GetComponent<Image>().sprite = currentWord.image;
-            wordVictoryPanel.transform.GetChild(1).transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = currentWord.name;
-            wordVictoryPanel.transform.GetChild(1).transform.GetChild(2).GetComponent<AudioSource>().clip = currentWord.audioClip;
-            wordVictoryPanel.SetActive(true);
-            audioSource.PlayOneShot(wordVictoryClip);
+            wordVictoryMenu.transform.GetChild(1).transform.GetChild(0).GetComponent<Image>().sprite = currentWord.image;
+            wordVictoryMenu.transform.GetChild(1).transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = currentWord.name;
+            wordVictoryMenu.transform.GetChild(1).transform.GetChild(2).GetComponent<AudioSource>().clip = currentWord.audioClip;
+            wordVictoryMenu.SetActive(true);
+            audioSource.PlayOneShot(wordVictoryClip, 0.2f);
+            if (!fireworkEffect.gameObject.activeSelf)
+            {
+                fireworkEffect.gameObject.SetActive(true);
+            }
+            fireworkEffect.Play();
             gameCanvas.transform.GetChild(1).Find("Player").gameObject.SetActive(false);
         }
         private void HandleLose()
         {
 
         }
+        private void HandleContentFinishedLoading()
+        {
+            contentFinishedLoading = true;
+        }
+
         private void HandleGroupOfWordsCreated()
         {
             groupOfWordsCreated = true;
         }
-        public void HandleCloseButtonClickNoGroupOfWordsWarning()
+
+        private void ShowWarning(Warning warning)
         {
-            selectGroupMenu.transform.GetChild(1).gameObject.SetActive(false);
-            mainMenu.SetActive(true);
+            currentWarningToShow = warning;
+            UpdateGameState(GameState.Warning);
+        }
+        public void HandleWarning()
+        {
+            if (currentWarningToShow.Equals(Warning.NoGroupOfWords))
+            {
+                if (!warningNoGroupOfWords.activeSelf)
+                {
+                    warningNoGroupOfWords.SetActive(true);
+                } else
+                {
+                    warningNoGroupOfWords.SetActive(false);
+                    mainMenu.SetActive(true);
+                }
+            } else if (currentWarningToShow.Equals(Warning.NoWords))
+            {
+                if (!warningNoWords.activeSelf)
+                {
+                    selectGroupMenu.transform.GetChild(0).gameObject.SetActive(false);
+                    warningNoWords.SetActive(true);
+                } else
+                {
+                    warningNoWords.SetActive(false);
+                    mainMenu.SetActive(true);
+                }
+            }
+        }
+        private void PlayWordNameEffect()
+        {
+            //wordVictoryMenu.transform.GetChild(1).transform.GetChild(0).GetComponent<Image>().sprite;
+
+        }
+        public void HandleWordAudioButtonClick()
+        {
+            PlayCurrentWord();
         }
 
-        public void HandleWordAudioButtonClick()
+        private void PlayCurrentWord()
         {
             if (audioSource.isPlaying)
             {
@@ -247,7 +318,7 @@ namespace Palavras
             audioSource.PlayOneShot(currentWord.audioClip);
         }
 
-        internal bool IsCorrectLetter(string letter)
+        public bool IsCorrectLetter(string letter)
         {
             return wordNameWithoutDiacritics.Contains(letter);
         }

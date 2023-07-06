@@ -29,7 +29,7 @@ namespace UI.Pagination
 
             //Debug.Log(offset + " ~~ " + pageSize);
 
-            //Debug.Log("Distance from start " + offset + ". Distance from end " + (totalSize - offset));
+            //Debug.Log("Distance from onStart " + offset + ". Distance from end " + (totalSize - offset));
 
             // let's give it a bit more breathing room (if we have enough pages to do so)
             if (NumberOfPages > 3) pageSize *= 1.5f;
@@ -104,8 +104,8 @@ namespace UI.Pagination
             }*/
 
             // this will work differently to the regular method
-            // instead of moving pages as we scroll past certain offsets at the start/end, we will instead move pages whenever we change the current page,
-            // provided we're less than two pages from the start/end
+            // instead of moving pages as we scroll past certain offsets at the onStart/end, we will instead move pages whenever we change the current page,
+            // provided we're less than two pages from the onStart/end
 
             bool pageMoved = false;
             var pagePosition = GetPagePosition(CurrentPage);

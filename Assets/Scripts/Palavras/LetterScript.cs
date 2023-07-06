@@ -28,9 +28,9 @@ namespace Palavras
             GameManagerScript.OnGameStateChange -= GameManagerScript_OnGameStateChange;
         }
 
-        private void GameManagerScript_OnGameStateChange(GameManagerScript.GameState state)
+        private void GameManagerScript_OnGameStateChange(int state)
         {
-            if (state == GameManagerScript.GameState.RightLetter)
+            if (state == GameState.RightLetter)
             {
                 // Tocar som quando acerta a letra
             }
