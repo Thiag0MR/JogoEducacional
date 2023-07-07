@@ -214,6 +214,9 @@ public class PalavraControllerScript : BaseControllerScript
                     AddGameObjectToView(entry, groupNameToPalavraViewContent[groupName]);
                     Debug.Log("Palavra adicionada com sucesso!");
                     base.MostrarResultadoDaOperacao("Palavra adicionada com sucesso!");
+                } else
+                {
+                    base.MostrarResultadoDaOperacao("Palavra já existe! Não adicionada.");
                 }
             } catch (Exception ex)
             {
