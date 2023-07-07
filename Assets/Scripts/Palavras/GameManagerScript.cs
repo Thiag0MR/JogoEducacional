@@ -180,25 +180,27 @@ namespace Palavras
         private async void HandleNextWord()
         {
             currentWordIndex++;
-            if (currentWordIndex > words.Count - 1)
+            if (currentWordIndex < words.Count)
+            {
+                currentWord = words[currentWordIndex];
+                numberOfLettersRemaining = CalculateNumberOfLettersRemaining(currentWord.name);
+                wordNameWithoutDiacritics = Util.RemoveDiacritics(currentWord.name);
+                lettersRemaining = wordNameWithoutDiacritics;
+                if (currentWordIndex != 0)
+                {
+                    wordPanelScript.CleanWordPanel();
+                    wordVictoryMenu.SetActive(false);
+                    gameCanvas.transform.GetChild(1).Find("Player").gameObject.SetActive(true);
+                }
+                wordPanelScript.GenerateWordPanel(currentWord);
+                letterGeneratorScript.GenerateLettersOnView(letters, wordNameWithoutDiacritics);
+
+                await Task.Delay(1000);
+                PlayCurrentWord();
+            } else
             {
                 Instance.UpdateGameState(GameState.EndGame);
             }
-            currentWord = words[currentWordIndex];
-            numberOfLettersRemaining = CalculateNumberOfLettersRemaining(currentWord.name);
-            wordNameWithoutDiacritics = Util.RemoveDiacritics(currentWord.name);
-            lettersRemaining = wordNameWithoutDiacritics;
-            if (currentWordIndex != 0)
-            {
-                wordPanelScript.CleanWordPanel();
-                wordVictoryMenu.SetActive(false);
-                gameCanvas.transform.GetChild(1).Find("Player").gameObject.SetActive(true);
-            }
-            wordPanelScript.GenerateWordPanel(currentWord);
-            letterGeneratorScript.GenerateLettersOnView(letters, wordNameWithoutDiacritics);
-
-            await Task.Delay(1000);
-            PlayCurrentWord();
         }
 
         private void HandleEndGame()
