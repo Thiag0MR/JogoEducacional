@@ -214,7 +214,7 @@ namespace Palavras
             if (gameStarted)
             {
                 if (!pauseMenu.activeSelf && !selectGroupMenu.transform.GetChild(0).gameObject.activeSelf 
-                    && !wordVictoryMenu.activeSelf && instructionMenu.activeSelf)
+                    && !wordVictoryMenu.activeSelf && !instructionMenu.activeSelf)
                 {
                     pauseMenu.SetActive(true);
                     gameCanvas.SetActive(false);
