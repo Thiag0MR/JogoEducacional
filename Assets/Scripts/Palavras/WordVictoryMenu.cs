@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WordVictoryPanel : MonoBehaviour
+public class WordVictoryMenu : MonoBehaviour
 {
     [SerializeField]
     private GameObject wordAudio;

@@ -25,7 +25,7 @@ namespace Palavras
         private Warning currentWarningToShow = Warning.NoGroupOfWords;
 
         [SerializeField]
-        private GameObject gameCanvas, mainMenu, pauseMenu, selectGroupMenu, wordVictoryMenu, instructionMenu, wordPanel;
+        private GameObject gameCanvas, mainMenu, pauseMenu, selectGroupMenu, wordVictoryMenu, groupVictoryMenu, instructionMenu, wordPanel;
 
         [SerializeField]
         private GameObject warningNoGroupOfWords, warningNoWords;
@@ -205,10 +205,17 @@ namespace Palavras
 
         private void HandleEndGame()
         {
-            gameStarted = false;
-            gameCanvas.SetActive(false);
-            wordVictoryMenu.SetActive(false);
-            mainMenu.SetActive(true);
+            if (gameStarted)
+            {
+                gameStarted = false;
+                gameCanvas.SetActive(false);
+                wordVictoryMenu.SetActive(false);
+                groupVictoryMenu.SetActive(true);
+            } else
+            {
+                groupVictoryMenu.SetActive(false);
+                mainMenu.SetActive(true);
+            }
         }
 
         private void HandlePause()
@@ -216,7 +223,7 @@ namespace Palavras
             if (gameStarted)
             {
                 if (!pauseMenu.activeSelf && !selectGroupMenu.transform.GetChild(0).gameObject.activeSelf 
-                    && !wordVictoryMenu.activeSelf && !instructionMenu.activeSelf)
+                    && !wordVictoryMenu.activeSelf && !groupVictoryMenu.activeSelf && !instructionMenu.activeSelf)
                 {
                     pauseMenu.SetActive(true);
                     gameCanvas.SetActive(false);
