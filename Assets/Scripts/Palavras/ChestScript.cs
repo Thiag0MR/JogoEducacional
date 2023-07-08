@@ -26,9 +26,8 @@ public class ChestScript : MonoBehaviour
             animator.SetBool("isLetterAbove", false);
             if (other.gameObject.GetComponent<LetterScript>().IsFalling)
             {
-                other.gameObject.SetActive(false);
-                Destroy(other.gameObject);
                 other.gameObject.GetComponent<LetterScript>().IsFalling = false;
+                other.gameObject.SetActive(false);
                 
                 if (GameManagerScript.Instance.IsCorrectLetter(other.name))
                 {
@@ -44,6 +43,7 @@ public class ChestScript : MonoBehaviour
                 {
                     GameManagerScript.Instance.UpdateGameState(GameState.WrongLetter);
                 }
+                Destroy(other.gameObject);
             }
         }
     }

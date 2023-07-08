@@ -16,24 +16,22 @@ namespace Palavras
         private readonly int limit = 30;
         public bool IsFalling { get; set; } = false;
 
+        private PlayerInputActions playerInputActions;
+
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
             audioSource = GetComponent<AudioSource>();
-            GameManagerScript.OnGameStateChange += GameManagerScript_OnGameStateChange;
+            playerInputActions = new PlayerInputActions();
+        }
+        private void OnEnable()
+        {
+            playerInputActions.Enable();
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
-            GameManagerScript.OnGameStateChange -= GameManagerScript_OnGameStateChange;
-        }
-
-        private void GameManagerScript_OnGameStateChange(int state)
-        {
-            if (state == GameState.RightLetter)
-            {
-                // Tocar som quando acerta a letra
-            }
+            playerInputActions.Disable();
         }
 
         void Update()
@@ -53,7 +51,7 @@ namespace Palavras
         }
         private void OnTriggerStay2D(Collider2D other)
         {
-            if (other.CompareTag("Chest") && Input.GetKey(KeyCode.Space))
+            if (other.CompareTag("Chest") && playerInputActions.Player.SpaceKey.IsPressed())
             {
                 Transform wordSpaceCanvasTransform = gameObject.transform.root.GetChild(1);
                 transform.SetParent(wordSpaceCanvasTransform, true);

@@ -1,7 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 namespace Palavras
 {
@@ -13,9 +11,16 @@ namespace Palavras
         private Rigidbody2D rb;
 
         private Vector2 screenBounds;
-        private Vector3 movement;
+        private Vector3 movementInput;
+        private Vector2 smoothedMovementInput;
+        private Vector2 smoothedMovementInputVelocity;
         private float playerPaddingX, playerPaddingY;
         private GameObject carryLocation;
+
+        [SerializeField]
+        private FixedJoystick fixedJoystick;
+
+        private PlayerInputActions playerInputActions;
 
         void Awake()
         {
@@ -24,16 +29,42 @@ namespace Palavras
             playerPaddingX = gameObject.GetComponent<SpriteRenderer>().bounds.size.x / 2.0f;
             playerPaddingY = gameObject.GetComponent<SpriteRenderer>().bounds.size.y / 2.4f;
             carryLocation = gameObject.transform.GetChild(0).gameObject;
+            playerInputActions = new PlayerInputActions();
+        }
+
+        private void OnEnable()
+        {
+            playerInputActions.Enable();
+        }
+
+        private void OnDisable()
+        {
+            playerInputActions.Disable();
         }
 
         void Update()
         {
-            movement = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0);
+            // Old input system
+            //movementInput = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0);
             screenBounds = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, 0));
+        }
+
+        // Using new input system
+        private void OnMove(InputValue value)
+        {
+            movementInput = value.Get<Vector2>();
         }
         void FixedUpdate()
         {
-            MovePlayer();
+            if (fixedJoystick.Direction != Vector2.zero)
+            {
+                rb.velocity = fixedJoystick.Direction * speed * Time.fixedDeltaTime;
+            } else
+            {
+                smoothedMovementInput = Vector2.SmoothDamp(smoothedMovementInput, movementInput,
+                    ref smoothedMovementInputVelocity, 0.1f);
+                rb.velocity = smoothedMovementInput * speed * Time.fixedDeltaTime;
+            }
         }
         void LateUpdate()
         {
@@ -57,14 +88,14 @@ namespace Palavras
             }
             transform.position = positionWithinScreen;
         }
-        public void MovePlayer()
-        {
-            rb.velocity = movement * speed * Time.fixedDeltaTime;
-        }
 
         private void OnTriggerStay2D(Collider2D other)
         {
-            if (other.CompareTag("Letter") && Input.GetKey(KeyCode.Space) && carryLocation.transform.childCount == 0)
+            //bool isSpaceKeyPressed = Input.GetKey(KeyCode.Space);
+            bool isSpaceKeyPressed = playerInputActions.Player.SpaceKey.IsPressed();
+
+            if (other.CompareTag("Letter") && isSpaceKeyPressed && carryLocation.transform.childCount == 0 
+                && !other.gameObject.GetComponent<LetterScript>().IsFalling)
             {
                 other.transform.SetParent(gameObject.transform.GetChild(0), true);
                 // O centro da letra é posicionado 
