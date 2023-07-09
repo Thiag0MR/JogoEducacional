@@ -22,6 +22,8 @@ namespace Palavras
 
         private PlayerInputActions playerInputActions;
 
+        public Animator animator;
+
         void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
@@ -30,6 +32,8 @@ namespace Palavras
             playerPaddingY = gameObject.GetComponent<SpriteRenderer>().bounds.size.y / 2.4f;
             carryLocation = gameObject.transform.GetChild(0).gameObject;
             playerInputActions = new PlayerInputActions();
+
+            animator = GetComponent<Animator>();
         }
 
         private void OnEnable()
@@ -47,6 +51,18 @@ namespace Palavras
             // Old input system
             //movementInput = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0);
             screenBounds = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, 0));
+
+            //verifica se o personagem esta nadando para realizar a animacao
+            if ((Input.GetAxis("Horizontal") != 0) || (Input.GetAxis("Vertical") != 0))
+            {
+                //esta nadando
+                animator.SetBool("estaNadando", true);
+            }
+            else
+            {
+                //nao esta nadando
+                animator.SetBool("estaNadando", false);
+            }
         }
 
         // Using new input system
@@ -104,6 +120,15 @@ namespace Palavras
                 //other.transform.localPosition = Vector3.zero;
 
                 other.GetComponent<LetterScript>().PlayLetterSound();
+
+                animator.SetBool("pegouLetra", true);//pegou a letra
+            }
+        }
+        private void OnTriggerExit2D(Collider2D other)
+        {
+            if (other.CompareTag("Letter"))
+            {
+                animator.SetBool("pegouLetra", false);//soltou a letra
             }
         }
     }

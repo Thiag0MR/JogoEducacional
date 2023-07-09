@@ -19583,6 +19583,7 @@ GameObject:
   - component: {fileID: 2104275277}
   - component: {fileID: 2104275282}
   - component: {fileID: 2104275284}
+  - component: {fileID: 2104275285}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -19604,6 +19605,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 300
   fixedJoystick: {fileID: 1062080231}
+  animator: {fileID: 0}
 --- !u!50 &2104275279
 Rigidbody2D:
   serializedVersion: 4
@@ -19744,6 +19746,27 @@ MonoBehaviour:
   m_DefaultActionMap: Player
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
+--- !u!95 &2104275285
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2104275276}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 6909f1904d7721642aa7ce0cc9f9071f, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &2107458512
 GameObject:
   m_ObjectHideFlags: 0
