@@ -9,6 +9,14 @@ public class PainelConfiguracaoScript : MonoBehaviour
 
     [SerializeField]
     private GameObject menus;
+
+    private GameObject botaoAreaProfessor;
+
+    private void Awake()
+    {
+        botaoAreaProfessor = gameObject.transform.GetChild(0).gameObject;
+        botaoAreaProfessor.SetActive(!Application.isMobilePlatform);
+    }
     public void HandleConfigButtonClick()
     {
         if (gameObject.activeSelf)

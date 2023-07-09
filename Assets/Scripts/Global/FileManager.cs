@@ -68,12 +68,31 @@ public static class FileManager {
         string? content = null;
         try
         {
-            if (File.Exists(path))
+            // Necessário utilizar a classe UnityWebRequest no android
+            if (Application.platform == RuntimePlatform.Android)
             {
-                content = await File.ReadAllTextAsync(path);
+                using (UnityWebRequest uwr = UnityWebRequest.Get(path))
+                {
+                    uwr.SendWebRequest();
+                    while (!uwr.isDone) await Task.Delay(5);
+
+                    if (uwr.result == UnityWebRequest.Result.ConnectionError ||
+                        uwr.result == UnityWebRequest.Result.ProtocolError) 
+                        Debug.Log($"{uwr.error}");
+                    else
+                    {
+                        content = uwr.downloadHandler.text;
+                    }
+                }
             } else
             {
-                Debug.Log("File " + path + " doesn't exist!");
+                if (File.Exists(path))
+                {
+                    content = await File.ReadAllTextAsync(path);
+                } else
+                {
+                    Debug.Log("File " + path + " doesn't exist!");
+                }
             }
         } 
         catch(Exception e)
@@ -145,18 +164,47 @@ public static class FileManager {
 
         return audioClip;
     }
-    public static async Task<Texture2D?> LoadImageFromDisk (string path)
+
+    public static async Task<Texture2D?> LoadImageFromDisk(string path)
     {
-        Texture2D? loadTexture = null;
+        Texture2D? texture = null;
+        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(path))
+        {
+            uwr.SendWebRequest();
+
+            // wrap tasks in try/catch, otherwise it'll fail silently
+            try
+            {
+                while (!uwr.isDone) await Task.Delay(5);
+
+                if (uwr.result == UnityWebRequest.Result.ConnectionError ||
+                    uwr.result == UnityWebRequest.Result.ProtocolError) 
+                    Debug.Log($"{uwr.error}");
+                else
+                {
+                    texture = DownloadHandlerTexture.GetContent(uwr);
+                }
+            }
+            catch (Exception err)
+            {
+                Debug.Log($"{err.Message}, {err.StackTrace}");
+            }
+        }
+        return texture;
+    }
+
+    public static async Task<Texture2D?> LoadImageFromDisk1 (string path)
+    {
+        Texture2D? texture = null;
         try
         {
             byte[] bytes = await File.ReadAllBytesAsync(path);
-            loadTexture = new Texture2D(1,1);
-            loadTexture.LoadImage(bytes);
+            texture = new Texture2D(1,1);
+            texture.LoadImage(bytes);
         } catch(Exception ex)
         {
             Debug.LogError(ex.Message);
         }
-        return loadTexture;
+        return texture;
     }
 }

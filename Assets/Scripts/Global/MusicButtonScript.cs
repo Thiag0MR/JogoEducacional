@@ -14,14 +14,15 @@ public class MusicButtonScript : MonoBehaviour
         if (audioSource.isPlaying)
         {
             audioSource.Pause();
-            gameObject.transform.GetChild(0).transform.gameObject.SetActive(false);
-            gameObject.transform.GetChild(1).transform.gameObject.SetActive(true);
+            gameObject.transform.GetChild(0).gameObject.SetActive(false);
+            gameObject.transform.GetChild(1).gameObject.SetActive(true);
         }
         else
         {
             audioSource.Play();
-            gameObject.transform.GetChild(0).transform.gameObject.SetActive(true);
-            gameObject.transform.GetChild(1).transform.gameObject.SetActive(false);
+            gameObject.transform.GetChild(0).gameObject.SetActive(true);
+            gameObject.transform.GetChild(1).gameObject.SetActive(false);
         }
+        Debug.Log("chamou");
     }
 }

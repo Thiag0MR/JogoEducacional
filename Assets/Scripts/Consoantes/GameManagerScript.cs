@@ -187,6 +187,7 @@ namespace Consoantes
         {
             if (!warningMenu.activeSelf)
             {
+                mainMenu.SetActive(false);
                 warningMenu.SetActive(true);
             } else
             {

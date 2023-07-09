@@ -44,8 +44,9 @@ public class BaseControllerScript : MonoBehaviour
     }
     protected virtual async void Awake()
     {
-        this.filePath = Application.dataPath + this.filePath;
-        this.audioFolder = Application.dataPath + this.audioFolder;
+        string ROOT_PATH = Application.isMobilePlatform ? Application.streamingAssetsPath : Application.dataPath;
+        this.filePath = Path.Combine(ROOT_PATH, this.filePath);
+        this.audioFolder = Path.Combine(ROOT_PATH, this.audioFolder);
         this.audioSource = gameObject.AddComponent<AudioSource>();
         this.nomeInputPlaceholderPainelAdicionar.text = this.nomePlaceholder;
         this.nomeAudioPainelAdicionar.text = "";
@@ -143,7 +144,7 @@ public class BaseControllerScript : MonoBehaviour
             {
                 FileInfo audioInfo = new FileInfo(audioPath);
                 string newAudioName = name.Trim() + audioInfo.Extension;
-                string newAudioPath = audioFolder + newAudioName;
+                string newAudioPath = Path.Combine(audioFolder, newAudioName);
                 Entry entry = new Entry(name.Trim(), newAudioName);
                 if (this.entryList == null)
                     this.entryList = new List<Entry>();
@@ -193,19 +194,19 @@ public class BaseControllerScript : MonoBehaviour
                     obj.name = newName;
 
                     // Renomear o audio e a imagem, além disso, editar a entrada na lista
-                    FileInfo audioInfo = new FileInfo(audioFolder + oldEntry.audioName);
+                    FileInfo audioInfo = new FileInfo(Path.Combine(audioFolder, oldEntry.audioName));
                     string newAudioName = newName.Trim() + audioInfo.Extension;
-                    string newAudioPath = audioFolder + newAudioName;
-                    FileManager.RenameFile(audioFolder + oldEntry.audioName, newAudioPath);
-                    if (audioPath.Equals(audioFolder + oldEntry.audioName)) audioPath = audioFolder + newAudioName;
+                    string newAudioPath = Path.Combine(audioFolder, newAudioName);
+                    FileManager.RenameFile(Path.Combine(audioFolder, oldEntry.audioName), newAudioPath);
+                    if (audioPath.Equals(Path.Combine(audioFolder, oldEntry.audioName))) audioPath = Path.Combine(audioFolder, newAudioName);
                     oldEntry.audioName = newAudioName;
                 }
-                string oldAudioPath = audioFolder + oldEntry.audioName;
+                string oldAudioPath = Path.Combine(audioFolder, oldEntry.audioName);
                 if (!audioPath.Equals(oldAudioPath))
                 {
                     FileInfo audioInfo = new FileInfo(audioPath);
                     string newAudioName = newName.Trim() + audioInfo.Extension;
-                    string newAudioPath = audioFolder + newAudioName;
+                    string newAudioPath = Path.Combine(audioFolder, newAudioName);
                     oldEntry.audioName = newAudioName;
                     FileManager.DeleteFile(oldAudioPath);
                     FileManager.CopyFile(audioPath, newAudioPath);
@@ -233,7 +234,7 @@ public class BaseControllerScript : MonoBehaviour
         FileBrowser.SetFilters( true, new FileBrowser.Filter( "Sounds", ".mp3", ".wav" ) );
 		FileBrowser.SetDefaultFilter( ".wav" );
 		FileBrowser.SetExcludedExtensions( ".lnk", ".tmp", ".zip", ".rar", ".exe" );
-		FileBrowser.AddQuickLink( "Downloads", Environment.GetEnvironmentVariable("USERPROFILE") + "\\Downloads", null );
+		FileBrowser.AddQuickLink( "Downloads", Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "Downloads"), null );
         StartCoroutine( ShowLoadDialogCoroutine() );
     }
 
@@ -252,7 +253,7 @@ public class BaseControllerScript : MonoBehaviour
     {
         this.nomeInputFieldPainelAdicionar.text = entry.name;
         this.nomeAudioPainelAdicionar.text = entry.audioName;
-        this.audioPath = audioFolder + entry.audioName;
+        this.audioPath = Path.Combine(audioFolder, entry.audioName);
     }
     public virtual void LimparCamposPainelAdicionar()
     {
@@ -283,7 +284,7 @@ public class BaseControllerScript : MonoBehaviour
     protected async void HandlePlayAudioButtonClickItem<T>(List<T> entryList, string name) where T : Entry
     {
         Entry entry = entryList.Find(e => e.name.Equals(name));
-        AudioClip audioClip = await FileManager.LoadAudioFromDisk(audioFolder + entry.audioName);
+        AudioClip audioClip = await FileManager.LoadAudioFromDisk(Path.Combine(audioFolder, entry.audioName));
         if (audioSource.isPlaying)
         {
             audioSource.Stop();
@@ -323,7 +324,7 @@ public class BaseControllerScript : MonoBehaviour
     private void RemoveEntry(Entry entry)
     {
         this.entryList.Remove(entry);
-        FileManager.DeleteFile(audioFolder + entry.audioName);
+        FileManager.DeleteFile(Path.Combine(audioFolder, entry.audioName));
         JsonFileManager.SaveListToJson(entryList, filePath);
     }
 

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -7,15 +8,16 @@ public class LoadManager : MonoBehaviour
 {
     public static async Task LoadVowels(Dictionary<string, Letter> vowels)
     {
-        string filePath = Application.dataPath + "/Data/Vogais.txt";
-        string audioFolder = Application.dataPath + "/Data/Audio/Vogais/";
+        string ROOT_PATH = GetRootPath();
+        string filePath = Path.Combine(ROOT_PATH, "Data", "Vogais.txt");
+        string audioFolder = Path.Combine(ROOT_PATH, "Data", "Audio", "Vogais");
         List<Entry> entries = await JsonFileManager.ReadListFromJson<Entry>(filePath);
 
         if (entries != null && entries.Count > 0)
         {
             foreach(var entry in entries)
             {
-                AudioClip audioClip = await FileManager.LoadAudioFromDisk(audioFolder + entry.audioName);
+                AudioClip audioClip = await FileManager.LoadAudioFromDisk(Path.Combine(audioFolder, entry.audioName));
                 Letter vogal = new(entry.name, audioClip);
                 vowels.Add(entry.name, vogal);
             }
@@ -28,15 +30,16 @@ public class LoadManager : MonoBehaviour
     }
     public static async Task LoadConsonants(Dictionary<string, Letter> consonants)
     {
-        string filePath = Application.dataPath + "/Data/Consoantes.txt";
-        string audioFolder = Application.dataPath + "/Data/Audio/Consoantes/";
+        string ROOT_PATH = GetRootPath();
+        string filePath = Path.Combine(ROOT_PATH, "Data", "Consoantes.txt");
+        string audioFolder = Path.Combine(ROOT_PATH, "Data", "Audio", "Consoantes");
         List<Entry> entries = await JsonFileManager.ReadListFromJson<Entry>(filePath);
 
         if (entries != null && entries.Count > 0)
         {
             foreach(var entry in entries)
             {
-                AudioClip audioClip = await FileManager.LoadAudioFromDisk(audioFolder + entry.audioName);
+                AudioClip audioClip = await FileManager.LoadAudioFromDisk(Path.Combine(audioFolder, entry.audioName));
                 Letter vogal = new(entry.name, audioClip);
                 consonants.Add(entry.name, vogal);
             }
@@ -48,9 +51,10 @@ public class LoadManager : MonoBehaviour
     }
     public static async Task<List<Word>> LoadWords(string groupName)
     {
-        string filePath = Application.dataPath + "/Data/Palavras.txt";
-        string audioFolder = Application.dataPath + "/Data/Audio/Palavras/";
-        string imageFolder = Application.dataPath + "/Data/Image/Palavras/";
+        string ROOT_PATH = GetRootPath();
+        string filePath = Path.Combine(ROOT_PATH, "Data", "Palavras.txt");
+        string audioFolder = Path.Combine(ROOT_PATH, "Data", "Audio", "Palavras");
+        string imageFolder = Path.Combine(ROOT_PATH, "Data", "Image", "Palavras");
         List<PalavraEntry> entries = await JsonFileManager.ReadListFromJson<PalavraEntry>(filePath);
         List<Word> words = null;
 
@@ -61,8 +65,8 @@ public class LoadManager : MonoBehaviour
             {
                 if (entry.groupName.Equals(groupName))
                 {
-                    AudioClip audioClip = await FileManager.LoadAudioFromDisk(audioFolder + entry.audioName);
-                    Texture2D texture = await FileManager.LoadImageFromDisk(imageFolder + entry.imageName);
+                    AudioClip audioClip = await FileManager.LoadAudioFromDisk(Path.Combine(audioFolder, entry.audioName));
+                    Texture2D texture = await FileManager.LoadImageFromDisk(Path.Combine(imageFolder, entry.imageName));
                     Sprite image = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
                     Word word = new(entry.name, audioClip, image);
                     words.Add(word);
@@ -74,5 +78,9 @@ public class LoadManager : MonoBehaviour
             Debug.Log("Erro ao carregar palavras!");
         }
         return words;
+    }
+    private static string GetRootPath()
+    {
+        return Application.isMobilePlatform ? Application.streamingAssetsPath : Application.dataPath;
     }
 }

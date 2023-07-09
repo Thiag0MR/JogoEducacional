@@ -1,6 +1,7 @@
 using Palavras;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -22,8 +23,9 @@ public class SelectGroupMenu : MonoBehaviour
 
     private async void CreateContent()
     {
-        string filePath = Application.dataPath + "/Data/GrupoPalavras.txt";
-        string imageFolder = Application.dataPath + "/Data/Image/Grupo/";
+        string ROOT_PATH = Application.isMobilePlatform ? Application.streamingAssetsPath : Application.dataPath;
+        string filePath = Path.Combine(ROOT_PATH, "Data", "GrupoPalavras.txt");
+        string imageFolder = Path.Combine(ROOT_PATH, "Data", "Image", "Grupo");
         List<Group> groupList = await JsonFileManager.ReadListFromJson<Group>(filePath);
         if (groupList != null && groupList.Count > 0)
         {
@@ -33,7 +35,7 @@ public class SelectGroupMenu : MonoBehaviour
                 GameObject obj = Instantiate(groupItemPrefab, content.transform, false);
                 obj.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = group.name;
                 
-                Texture2D texture = await FileManager.LoadImageFromDisk(imageFolder + group.imageName);
+                Texture2D texture = await FileManager.LoadImageFromDisk(Path.Combine(imageFolder, group.imageName));
                 obj.transform.GetChild(1).GetChild(0).GetChild(0).GetComponent<Image>().sprite = Sprite.Create(
                     texture, 
                     new Rect(0, 0, texture.width, texture.height),
