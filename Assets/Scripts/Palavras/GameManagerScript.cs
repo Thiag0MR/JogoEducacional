@@ -323,6 +323,11 @@ namespace Palavras
             {
                 mainMenu.SetActive(false);
                 instructionMenu.SetActive(true);
+                if (Application.isMobilePlatform)
+                {
+                    instructionMenu.transform.GetChild(0).gameObject.SetActive(false);
+                    instructionMenu.transform.GetChild(1).gameObject.SetActive(true);
+                }
             } else
             {
                 instructionMenu.SetActive(false);
