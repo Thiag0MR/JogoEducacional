@@ -178,6 +178,7 @@ namespace Palavras
             musicButton.SetActive(true);
             gameCanvas.SetActive(true);
             gameStarted = true;
+            currentWordIndex = -1;
             UpdateGameState(GameState.NextWord);
         }
         private async void HandleNextWord()
@@ -188,6 +189,7 @@ namespace Palavras
                 currentWord = words[currentWordIndex];
                 numberOfLettersRemaining = CalculateNumberOfLettersRemaining(currentWord.name);
                 wordNameWithoutDiacritics = Util.RemoveDiacritics(currentWord.name);
+                Debug.Log(wordNameWithoutDiacritics);
                 lettersRemaining = wordNameWithoutDiacritics;
                 if (currentWordIndex != 0)
                 {

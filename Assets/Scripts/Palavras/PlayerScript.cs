@@ -48,12 +48,10 @@ namespace Palavras
 
         void Update()
         {
-            // Old input system
-            //movementInput = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0);
             screenBounds = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, 0));
 
-            //verifica se o personagem esta nadando para realizar a animacao
-            if ((Input.GetAxis("Horizontal") != 0) || (Input.GetAxis("Vertical") != 0))
+            //verifica se o player está nadando para realizar a animação
+            if (movementInput != Vector3.zero || fixedJoystick.Direction != Vector2.zero)
             {
                 //esta nadando
                 animator.SetBool("estaNadando", true);
@@ -64,10 +62,9 @@ namespace Palavras
                 animator.SetBool("estaNadando", false);
             }
         }
-
-        // Using new input system
         private void OnMove(InputValue value)
         {
+            // Método chamado quando o player é movimentado
             movementInput = value.Get<Vector2>();
         }
         void FixedUpdate()
@@ -107,15 +104,16 @@ namespace Palavras
 
         private void OnTriggerStay2D(Collider2D other)
         {
-            //bool isSpaceKeyPressed = Input.GetKey(KeyCode.Space);
             bool isSpaceKeyPressed = playerInputActions.Player.SpaceKey.IsPressed();
 
             if (other.CompareTag("Letter") && isSpaceKeyPressed && carryLocation.transform.childCount == 0 
                 && !other.gameObject.GetComponent<LetterScript>().IsFalling)
             {
                 other.transform.SetParent(gameObject.transform.GetChild(0), true);
+
                 // O centro da letra é posicionado 
                 other.transform.localPosition = new Vector3(0, other.transform.localPosition.y, 0);
+
                 // O centro da letra é posicionado no centro do objeto carryLocation.
                 //other.transform.localPosition = Vector3.zero;
 

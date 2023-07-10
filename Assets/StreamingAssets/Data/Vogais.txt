@@ -1,1 +1,0 @@
-{"list":[{"name":"a","audioName":"a.mp3"},{"name":"e","audioName":"e.mp3"},{"name":"i","audioName":"i.mp3"},{"name":"o","audioName":"o.mp3"},{"name":"u","audioName":"u.mp3"}]}
