@@ -65,8 +65,10 @@ public class LoadManager : MonoBehaviour
             {
                 if (entry.groupName.Equals(groupName))
                 {
-                    AudioClip audioClip = await FileManager.LoadAudioFromDisk(Path.Combine(audioFolder, entry.audioName));
-                    Texture2D texture = await FileManager.LoadImageFromDisk(Path.Combine(imageFolder, entry.imageName));
+                    string audioPath = Path.Combine(audioFolder, entry.groupName, entry.audioName);
+                    string imagePath = Path.Combine(imageFolder, entry.groupName, entry.imageName);
+                    AudioClip audioClip = await FileManager.LoadAudioFromDisk(audioPath);
+                    Texture2D texture = await FileManager.LoadImageFromDisk(imagePath);
                     Sprite image = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
                     Word word = new(entry.name, audioClip, image);
                     words.Add(word);

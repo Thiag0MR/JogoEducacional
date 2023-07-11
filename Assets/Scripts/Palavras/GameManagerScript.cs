@@ -189,13 +189,14 @@ namespace Palavras
                 currentWord = words[currentWordIndex];
                 numberOfLettersRemaining = CalculateNumberOfLettersRemaining(currentWord.name);
                 wordNameWithoutDiacritics = Util.RemoveDiacritics(currentWord.name);
-                Debug.Log(wordNameWithoutDiacritics);
                 lettersRemaining = wordNameWithoutDiacritics;
                 if (currentWordIndex != 0)
                 {
                     wordPanelScript.CleanWordPanel();
                     wordVictoryMenu.SetActive(false);
-                    gameCanvas.transform.GetChild(1).Find("Player").gameObject.SetActive(true);
+                    GameObject player = gameCanvas.transform.GetChild(1).Find("Player").gameObject;
+                    player.GetComponent<PlayerScript>().movementInput = Vector3.zero;
+                    player.SetActive(true);
                 }
                 wordPanelScript.GenerateWordPanel(currentWord);
                 letterGeneratorScript.GenerateLettersOnView(letters, wordNameWithoutDiacritics);

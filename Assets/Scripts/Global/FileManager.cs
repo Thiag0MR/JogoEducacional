@@ -15,6 +15,22 @@ public static class FileManager {
             if (File.Exists(path))
             {
                 File.Delete(path);
+                Debug.Log($"Arquivo {path} deletado com sucesso!");
+            }
+        } catch (Exception e)
+        {
+            Debug.LogError(e.Message);
+        }
+    }
+
+    public static void DeleteDirectory(string path)
+    {
+        try
+        {
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, true);
+                Debug.Log($"Diretório {path} deletado com sucesso!");
             }
         } catch (Exception e)
         {
@@ -36,10 +52,10 @@ public static class FileManager {
                 if (File.Exists(toPath))
                 {
                     File.Delete(toPath);
-                    Debug.Log("Arquivo " + toPath + " deletado com sucesso!");
+                    Debug.Log($"Arquivo {toPath} deletado com sucesso!");
                 }                
                 File.Copy(fromPath, toPath);
-                Debug.Log("Arquivo " + fromPath + " copiado para " + toPath);
+                Debug.Log($"Arquivo {fromPath} copiado para {toPath}");
             }
         }
         catch (IOException ex)
@@ -48,14 +64,14 @@ public static class FileManager {
         }
     }
 
-    public static void RenameFile (string fromPath, string toPath)
+    public static void MoveFile (string fromPath, string toPath)
     {
         try
         {
             if (!fromPath.Equals(toPath))
             {
                 File.Move(fromPath, toPath);
-                Debug.Log("Arquivo " + fromPath + " movido para " + toPath);
+                Debug.Log($"Arquivo {fromPath} movido para {toPath}");
             }
         } 
         catch (IOException ex)
@@ -91,7 +107,7 @@ public static class FileManager {
                     content = await File.ReadAllTextAsync(path);
                 } else
                 {
-                    Debug.Log("File " + path + " doesn't exist!");
+                    Debug.Log($"File {path} doesn't exist!");
                 }
             }
         } 
@@ -109,16 +125,16 @@ public static class FileManager {
             if (!Directory.Exists(Path.GetDirectoryName(path)))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
-                Debug.Log("Diretório " + Path.GetDirectoryName(path) + " criado com sucesso!");
+                Debug.Log($"Diretório {Path.GetDirectoryName(path)} criado com sucesso!");
             }
             if (!File.Exists(path))
             {
                 File.Create(path).Close();
-                Debug.Log("File " + path + " created!");
+                Debug.Log($"File {path} created!");
             }
             else
             {
-                Debug.Log("File " + path + " exists!");
+                Debug.Log($"File {path} exists!");
             }
             File.SetAttributes(path, FileAttributes.Normal);
             await File.WriteAllTextAsync(path, content);
@@ -139,7 +155,7 @@ public static class FileManager {
             audioType = AudioType.MPEG;
 
         AudioClip? audioClip = null;
-        using (UnityWebRequest uwr = UnityWebRequestMultimedia.GetAudioClip(path, audioType))
+        using (UnityWebRequest uwr = UnityWebRequestMultimedia.GetAudioClip("file://" + path, audioType))
         {
             uwr.SendWebRequest();
 
@@ -150,7 +166,7 @@ public static class FileManager {
 
                 if (uwr.result == UnityWebRequest.Result.ConnectionError ||
                     uwr.result == UnityWebRequest.Result.ProtocolError) 
-                    Debug.Log($"{uwr.error}");
+                    Debug.Log($"{uwr.error}, Erro ao carregar áudio {path}");
                 else
                 {
                     audioClip = DownloadHandlerAudioClip.GetContent(uwr);
@@ -158,7 +174,7 @@ public static class FileManager {
             }
             catch (Exception err)
             {
-                Debug.Log($"{err.Message}, {err.StackTrace}");
+                Debug.Log($"{err.Message}, {err.StackTrace}, Erro ao carregar áudio {path}");
             }
         }
 
@@ -168,7 +184,7 @@ public static class FileManager {
     public static async Task<Texture2D?> LoadImageFromDisk(string path)
     {
         Texture2D? texture = null;
-        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(path))
+        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture("file://" + path))
         {
             uwr.SendWebRequest();
 
@@ -179,7 +195,7 @@ public static class FileManager {
 
                 if (uwr.result == UnityWebRequest.Result.ConnectionError ||
                     uwr.result == UnityWebRequest.Result.ProtocolError) 
-                    Debug.Log($"{uwr.error}");
+                    Debug.Log($"{uwr.error}, Erro ao carregar imagem {path}");
                 else
                 {
                     texture = DownloadHandlerTexture.GetContent(uwr);
@@ -187,23 +203,8 @@ public static class FileManager {
             }
             catch (Exception err)
             {
-                Debug.Log($"{err.Message}, {err.StackTrace}");
+                Debug.Log($"{err.Message}, {err.StackTrace}, Erro ao carregar imagem {path}");
             }
-        }
-        return texture;
-    }
-
-    public static async Task<Texture2D?> LoadImageFromDisk1 (string path)
-    {
-        Texture2D? texture = null;
-        try
-        {
-            byte[] bytes = await File.ReadAllBytesAsync(path);
-            texture = new Texture2D(1,1);
-            texture.LoadImage(bytes);
-        } catch(Exception ex)
-        {
-            Debug.LogError(ex.Message);
         }
         return texture;
     }

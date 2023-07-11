@@ -11,7 +11,7 @@ namespace Palavras
         private Rigidbody2D rb;
 
         private Vector2 screenBounds;
-        private Vector3 movementInput;
+        public Vector3 movementInput;
         private Vector2 smoothedMovementInput;
         private Vector2 smoothedMovementInputVelocity;
         private float playerPaddingX, playerPaddingY;
@@ -22,7 +22,7 @@ namespace Palavras
 
         private PlayerInputActions playerInputActions;
 
-        public Animator animator;
+        private Animator animator;
 
         void Awake()
         {

@@ -33,7 +33,7 @@ public class PalavraControllerScript : BaseControllerScript
     private GameObject palavrasViewport;
 
     private List<Group> groupList;
-    private string wordImageFolder, groupImageFolder, imagePath, groupPath;
+    private string wordImageFolder, groupImageFolder, selectedImagePathFromDisk, groupPath;
 
     private new List<PalavraEntry> entryList;
 
@@ -52,7 +52,7 @@ public class PalavraControllerScript : BaseControllerScript
         this.wordImageFolder = Path.Combine("Data", "Image", "Palavras");
         this.groupImageFolder = Path.Combine("Data", "Image", "Grupo");
         this.groupPath = Path.Combine("Data", "GrupoPalavras.txt");
-        this.imagePath = null;
+        this.selectedImagePathFromDisk = null;
         this.groupSelectedColor = new Color(0.000f, 0.361f, 0.776f, 0.471f);
         this.groupNotSelectedColor = new Color(0.000f, 0.361f, 0.776f, 0.000f);
     }
@@ -92,7 +92,8 @@ public class PalavraControllerScript : BaseControllerScript
     // Eventos
     private void PalavraItemScript_OnPlayAudioButtonClick(string name)
     {
-        base.HandlePlayAudioButtonClickItem(entryList, name);
+        PalavraEntry entry = entryList.Find(e => e.name.Equals(name));
+        base.HandlePlayAudioButtonClickItem(Path.Combine(audioFolder, entry.groupName, entry.audioName));
     }
     private void PalavraItemScript_OnDeleteButtonClick(string name)
     {
@@ -164,7 +165,7 @@ public class PalavraControllerScript : BaseControllerScript
     public override async Task InitializeEntryList()
     {
         await Task.Delay(1000);
-        this.entryList = await JsonFileManager.ReadListFromJson<PalavraEntry>(this.filePath);   
+        this.entryList = await JsonFileManager.ReadListFromJson<PalavraEntry>(this.jsonFilePath);   
     }
     private void InitializeDictionary()
     {
@@ -196,17 +197,18 @@ public class PalavraControllerScript : BaseControllerScript
     {
         string name = nomeInputFieldPainelAdicionar.text.ToLower();
 
-        if (!name.Equals("") && audioPath != null && imagePath != null && dropdownPainelAdicionarPalavra.options.Count > 0)
+        if (!name.Equals("") && selectedAudioPathFromDisk != null && selectedImagePathFromDisk != null 
+            && dropdownPainelAdicionarPalavra.options.Count > 0)
         {
             try
             {
-                FileInfo audioInfo = new FileInfo(audioPath);
-                FileInfo imageInfo = new FileInfo(imagePath);
+                FileInfo audioInfo = new FileInfo(selectedAudioPathFromDisk);
+                FileInfo imageInfo = new FileInfo(selectedImagePathFromDisk);
+                string groupName = dropdownPainelAdicionarPalavra.options[dropdownPainelAdicionarPalavra.value].text;
                 string newAudioName = name.Trim() + audioInfo.Extension;
                 string newImageName = name.Trim() + imageInfo.Extension;
-                string newAudioPath = Path.Combine(audioFolder, newAudioName);
-                string newImagePath = Path.Combine(wordImageFolder, newImageName);
-                string groupName = dropdownPainelAdicionarPalavra.options[dropdownPainelAdicionarPalavra.value].text;
+                string newAudioPath = Path.Combine(audioFolder, groupName, newAudioName);
+                string newImagePath = Path.Combine(wordImageFolder, groupName, newImageName);
                 PalavraEntry entry = new PalavraEntry (name.Trim(), newAudioName, newImageName, groupName);
                 if (this.entryList == null)
                 {
@@ -232,10 +234,14 @@ public class PalavraControllerScript : BaseControllerScript
     {
         string newName = nomeInputFieldPainelAdicionar.text.ToLower();
 
-        if (!newName.Equals("") && audioPath != null && imagePath != null && dropdownPainelAdicionarPalavra.options.Count > 0)
+        if (!newName.Equals("") && selectedAudioPathFromDisk != null && selectedImagePathFromDisk != null 
+            && dropdownPainelAdicionarPalavra.options.Count > 0)
         {
             try
             {
+                string message;
+                bool changeAudio = false;
+                bool changeImage = false;
                 PalavraEntry oldEntry = this.entryList[editEntryIndex];
                 string oldName = oldEntry.name;
                 GameObject obj = viewContent.transform.Find(oldName).gameObject;
@@ -246,61 +252,68 @@ public class PalavraControllerScript : BaseControllerScript
                 if (!oldName.Equals(newName))
                 {
                     if(this.entryList.Find(entry => entry.name.Equals(newName) && entry.groupName.Equals(newGroupName)) != null) {
-                        Debug.Log("Já existe outra palavra com o mesmo nome!");
-                        base.MostrarResultadoDaOperacao("Já existe outra palavra com o mesmo nome!");
+                        message = "Já existe outra palavra com o mesmo nome!";
+                        Debug.Log(message);
+                        base.MostrarResultadoDaOperacao(message);
                         return;
                     }
                     oldEntry.name = newName;
                     obj.GetComponentInChildren<TextMeshProUGUI>().text = newName;
                     obj.name = newName;
 
-                    // Renomear o audio e a imagem, além disso, editar a entrada na lista
-                    FileInfo audioInfo = new FileInfo(Path.Combine(audioFolder, oldEntry.audioName));
-                    string newAudioName = newName.Trim() + audioInfo.Extension;
-                    string newAudioPath = Path.Combine(audioFolder, newAudioName);
-                    FileManager.RenameFile(Path.Combine(audioFolder, oldEntry.audioName), newAudioPath);
-                    if (audioPath.Equals(Path.Combine(audioFolder, oldEntry.audioName))) audioPath = Path.Combine(audioFolder, newAudioName);
-                    oldEntry.audioName = newAudioName;
-
-                    FileInfo imageInfo = new FileInfo(Path.Combine(wordImageFolder, oldEntry.imageName));
-                    string newImageName = newName.Trim() + imageInfo.Extension;
-                    string newImagePath = Path.Combine(wordImageFolder, newImageName);
-                    FileManager.RenameFile(Path.Combine(wordImageFolder, oldEntry.imageName), newImagePath);
-                    if (imagePath.Equals(Path.Combine(wordImageFolder, oldEntry.imageName))) imagePath = Path.Combine(wordImageFolder, newImageName);
-                    oldEntry.imageName = newImageName;
+                    changeAudio = true;
+                    changeImage = true;
                 }
 
                 if (!oldGroupName.Equals(newGroupName))
                 {
                     oldEntry.groupName = newGroupName;
                     obj.transform.SetParent(groupNameToPalavraViewContent[newGroupName].transform);
+                    changeAudio = true;
+                    changeImage = true;
                 }
-                string oldAudioPath = Path.Combine(audioFolder, oldEntry.audioName);
-                if (!audioPath.Equals(oldAudioPath))
-                {
-                    FileInfo audioInfo = new FileInfo(audioPath);
-                    string newAudioName = newName.Trim() + audioInfo.Extension;
-                    string newAudioPath = Path.Combine(audioFolder, newAudioName);
-                    oldEntry.audioName = newAudioName;
-                    FileManager.DeleteFile(oldAudioPath);
-                    FileManager.CopyFile(audioPath, newAudioPath);
-                }
-                string oldImagePath = Path.Combine(wordImageFolder, oldEntry.imageName);
-                if (!imagePath.Equals(oldImagePath))
-                {
-                    FileInfo imageInfo = new FileInfo(imagePath);
-                    string newImageName = newName.Trim() + imageInfo.Extension;
-                    string newImagePath = Path.Combine(wordImageFolder, newImageName);
-                    oldEntry.imageName = newImageName;
-                    FileManager.DeleteFile(oldImagePath);
-                    FileManager.CopyFile(imagePath, newImagePath);
 
+                string oldAudioPath = Path.Combine(audioFolder, oldGroupName, oldEntry.audioName);
+                bool newAudioAdded = !selectedAudioPathFromDisk.Equals(oldAudioPath);
+                if (newAudioAdded || changeAudio)
+                {
+                    FileInfo audioInfo = new FileInfo(newAudioAdded ? selectedAudioPathFromDisk : oldAudioPath);
+                    string newAudioName = newName.Trim() + audioInfo.Extension;
+                    string newAudioPath = Path.Combine(audioFolder, newGroupName, newAudioName);
+                    oldEntry.audioName = newAudioName;
+                    if (newAudioAdded)
+                    {
+                        FileManager.DeleteFile(oldAudioPath);
+                        FileManager.CopyFile(selectedAudioPathFromDisk, newAudioPath);
+                    } else
+                    {
+                        FileManager.MoveFile(oldAudioPath, newAudioPath);
+                    }
+                }
+
+                string oldImagePath = Path.Combine(wordImageFolder, oldGroupName, oldEntry.imageName);
+                bool newImageAdded = !selectedImagePathFromDisk.Equals(oldImagePath); 
+                if (newImageAdded || changeImage)
+                {
+                    FileInfo imageInfo = new FileInfo(newImageAdded ? selectedImagePathFromDisk : oldImagePath);
+                    string newImageName = newName.Trim() + imageInfo.Extension;
+                    string newImagePath = Path.Combine(wordImageFolder, newGroupName, newImageName);
+                    oldEntry.imageName = newImageName;
+                    if (newImageAdded)
+                    {
+                        FileManager.DeleteFile(oldImagePath);
+                        FileManager.CopyFile(selectedImagePathFromDisk, newImagePath);
+                    } else
+                    {
+                        FileManager.MoveFile(oldImagePath, newImagePath);
+                    }
                     Texture2D texture = await FileManager.LoadImageFromDisk(newImagePath);
                     obj.GetComponentInChildren<RawImage>().texture = texture;
                 }
-                JsonFileManager.SaveListToJson(entryList, filePath);
-                Debug.Log("Palavra editada com sucesso!");
-                base.MostrarResultadoDaOperacao("Palavra editada com sucesso!");
+                JsonFileManager.SaveListToJson(entryList, jsonFilePath);
+                message = "Palavra editada com sucesso!"; 
+                Debug.Log(message);
+                base.MostrarResultadoDaOperacao(message);
                 LimparCamposPainelAdicionar();
             } catch(Exception ex)
             {
@@ -324,8 +337,8 @@ public class PalavraControllerScript : BaseControllerScript
 
         if (FileBrowser.Success)
         {
-            this.imagePath = FileBrowser.Result[0];
-            FileInfo imageInfo = new(imagePath);
+            this.selectedImagePathFromDisk = FileBrowser.Result[0];
+            FileInfo imageInfo = new(selectedImagePathFromDisk);
             this.nomeImagemPainelAdicionarPalavra.text = imageInfo.Name;
             this.nomeImagemPainelAdicionarGrupo.text = imageInfo.Name;
         }
@@ -333,17 +346,17 @@ public class PalavraControllerScript : BaseControllerScript
     private void AddEntry(PalavraEntry entry, string newAudioPath, string newImagePath)
     {
         AddEntry(entryList, entry, newAudioPath);
-        FileManager.CopyFile(imagePath, newImagePath);
-        imagePath = null;
+        FileManager.CopyFile(selectedImagePathFromDisk, newImagePath);
+        selectedImagePathFromDisk = null;
         nomeImagemPainelAdicionarPalavra.text = "";
     }
 
     private void RemoveEntry (PalavraEntry entry)
     {
         entryList.Remove(entry);
-        FileManager.DeleteFile(Path.Combine(audioFolder, entry.audioName));
-        FileManager.DeleteFile(Path.Combine(wordImageFolder, entry.imageName));
-        JsonFileManager.SaveListToJson<PalavraEntry>(entryList, filePath);
+        FileManager.DeleteFile(Path.Combine(audioFolder, entry.groupName, entry.audioName));
+        FileManager.DeleteFile(Path.Combine(wordImageFolder, entry.groupName, entry.imageName));
+        JsonFileManager.SaveListToJson<PalavraEntry>(entryList, jsonFilePath);
     }
 
     private void RemoveAllEntryByGroupName(string groupName)
@@ -354,20 +367,22 @@ public class PalavraControllerScript : BaseControllerScript
             {
                 if (entryList[i].groupName == groupName)
                 {
-                    FileManager.DeleteFile(Path.Combine(audioFolder, entryList[i].audioName));
-                    FileManager.DeleteFile(Path.Combine(wordImageFolder, entryList[i].imageName));
+                    FileManager.DeleteFile(Path.Combine(audioFolder, entryList[i].groupName, entryList[i].audioName));
+                    FileManager.DeleteFile(Path.Combine(wordImageFolder, entryList[i].groupName, entryList[i].imageName));
                     entryList.RemoveAt(i);
                 }
             }
-            JsonFileManager.SaveListToJson<PalavraEntry>(entryList, filePath);
+            JsonFileManager.SaveListToJson<PalavraEntry>(entryList, jsonFilePath);
         }
     }
 
-    public override void PreencherCamposPainelAdicionar(Entry entry)
+    public void PreencherCamposPainelAdicionar(PalavraEntry entry)
     {
-        base.PreencherCamposPainelAdicionar(entry);
-        nomeImagemPainelAdicionarPalavra.text = ((PalavraEntry)entry).imageName;
-        imagePath = Path.Combine(wordImageFolder, ((PalavraEntry)entry).imageName);
+        nomeInputFieldPainelAdicionar.text = entry.name;
+        nomeAudioPainelAdicionar.text = entry.audioName;
+        selectedAudioPathFromDisk = Path.Combine(audioFolder, entry.groupName, entry.audioName);
+        nomeImagemPainelAdicionarPalavra.text = entry.imageName;
+        selectedImagePathFromDisk = Path.Combine(wordImageFolder, entry.groupName, entry.imageName);
         if (dropdownPainelAdicionarPalavra.options.Count > 1)
         {
             dropdownPainelAdicionarPalavra.value = FindDropdownIndex(activeGroup);
@@ -443,7 +458,7 @@ public class PalavraControllerScript : BaseControllerScript
     private void PreencherCamposPainelAdicionarGrupo(Group group)
     {
         groupInputField.text = group.name;
-        imagePath = Path.Combine(groupImageFolder, group.imageName);
+        selectedImagePathFromDisk = Path.Combine(groupImageFolder, group.imageName);
         nomeImagemPainelAdicionarGrupo.text = group.imageName;
     }
     public void HandleFecharButtonClickPainelGrupo()
@@ -463,18 +478,21 @@ public class PalavraControllerScript : BaseControllerScript
     {
         string newGroupName = groupInputField.text.ToLower();
 
-        if (!newGroupName.Equals("") && imagePath != null)
+        if (!newGroupName.Equals("") && selectedImagePathFromDisk != null)
         {
             try
             {
+                string message;
+                string oldImagePath;
                 Group oldGroup = this.groupList[editGroupIndex];
                 string oldGroupName = oldGroup.name;
                 GameObject obj = groupViewContent.transform.Find(oldGroupName).gameObject;
                 if (!oldGroupName.Equals(newGroupName))
                 {
                     if(this.groupList.Find(entry => entry.name.Equals(newGroupName)) != null) {
-                        Debug.Log("Já existe outro grupo com o mesmo nome!");
-                        MostrarResultadoDaOperacaoGrupoAdd("Já existe outro grupo com o mesmo nome!");
+                        message = "Já existe outro grupo com o mesmo nome!"; 
+                        Debug.Log(message);
+                        MostrarResultadoDaOperacaoGrupoAdd(message);
                         return;
                     }
                     groupNameToPalavraViewContent[oldGroup.name].name = "Content_" + newGroupName;
@@ -486,11 +504,12 @@ public class PalavraControllerScript : BaseControllerScript
                     obj.GetComponentInChildren<TextMeshProUGUI>().text = newGroupName;
                     obj.name = newGroupName;
 
-                    FileInfo imageInfo = new FileInfo(Path.Combine(groupImageFolder, oldGroup.imageName));
+                    oldImagePath = Path.Combine(groupImageFolder, oldGroup.imageName); 
+                    FileInfo imageInfo = new FileInfo(oldImagePath);
                     string newImageName = newGroupName.Trim() + imageInfo.Extension;
                     string newImagePath = Path.Combine(groupImageFolder, newImageName);
-                    FileManager.RenameFile(Path.Combine(groupImageFolder, oldGroup.imageName), newImagePath);
-                    if (imagePath.Equals(Path.Combine(groupImageFolder, oldGroup.imageName))) imagePath = Path.Combine(groupImageFolder, newImageName);
+                    FileManager.MoveFile(oldImagePath, newImagePath);
+                    if (selectedImagePathFromDisk.Equals(oldImagePath)) selectedImagePathFromDisk = newImagePath;
                     oldGroup.imageName = newImageName;
 
                     foreach(var entry in entryList) {
@@ -499,24 +518,25 @@ public class PalavraControllerScript : BaseControllerScript
                             entry.groupName = newGroupName;
                         }
                     }
-                    JsonFileManager.SaveListToJson(entryList, filePath);
+                    JsonFileManager.SaveListToJson(entryList, jsonFilePath);
                 }
-                string oldImagePath = Path.Combine(groupImageFolder, oldGroup.imageName);
-                if (!imagePath.Equals(oldImagePath))
+                oldImagePath = Path.Combine(groupImageFolder, oldGroup.imageName);
+                if (!selectedImagePathFromDisk.Equals(oldImagePath))
                 {
-                    FileInfo imageInfo = new FileInfo(imagePath);
+                    FileInfo imageInfo = new FileInfo(selectedImagePathFromDisk);
                     string newImageName = newGroupName.Trim() + imageInfo.Extension;
                     string newImagePath = Path.Combine(groupImageFolder, newImageName);
                     oldGroup.imageName = newImageName;
                     FileManager.DeleteFile(oldImagePath);
-                    FileManager.CopyFile(imagePath, newImagePath);
+                    FileManager.CopyFile(selectedImagePathFromDisk, newImagePath);
 
                     Texture2D texture = await FileManager.LoadImageFromDisk(newImagePath);
                     obj.GetComponentInChildren<RawImage>().texture = texture;
                 }
                 JsonFileManager.SaveListToJson(groupList, groupPath);
-                Debug.Log("Grupo editado com sucesso!");
-                MostrarResultadoDaOperacaoGrupoAdd("Grupo editado com sucesso!");
+                message = "Grupo editado com sucesso!"; 
+                Debug.Log(message);
+                MostrarResultadoDaOperacaoGrupoAdd(message);
                 LimparCamposPainelAdicionarGrupo();
             } catch(Exception ex)
             {
@@ -527,9 +547,9 @@ public class PalavraControllerScript : BaseControllerScript
     public void HandleSalvarButtonClickPainelAdicionarGrupo()
     {
         string name = groupInputField.text.Trim().ToLower();
-        if (!name.Equals("") && imagePath != null)
+        if (!name.Equals("") && selectedImagePathFromDisk != null)
         {
-            FileInfo imageInfo = new FileInfo(imagePath);
+            FileInfo imageInfo = new FileInfo(selectedImagePathFromDisk);
             string newImageName = name.Trim() + imageInfo.Extension;
             string newImagePath = Path.Combine(groupImageFolder, newImageName);
             Group group = new Group(name, newImageName);
@@ -553,13 +573,13 @@ public class PalavraControllerScript : BaseControllerScript
     {
         groupList.Add(group);
         JsonFileManager.SaveListToJson<Group>(groupList, groupPath);
-        FileManager.CopyFile(imagePath, newImagePath);
+        FileManager.CopyFile(selectedImagePathFromDisk, newImagePath);
         LimparCamposPainelAdicionarGrupo();
         mensagemNenhumGrupoCriadoTxtMeshPro.gameObject.SetActive(false);
     }
     private void LimparCamposPainelAdicionarGrupo()
     {
-        this.imagePath = null;
+        this.selectedImagePathFromDisk = null;
         groupInputField.text = "";
         nomeImagemPainelAdicionarGrupo.text = "";
         nomeImagemPainelAdicionarPalavra.text = ""; 
@@ -576,6 +596,8 @@ public class PalavraControllerScript : BaseControllerScript
             RemoveGroupFromView(groupName);
             groupNameToPalavraViewContent.Remove(groupName);
             RemoveAllEntryByGroupName(groupName);
+            FileManager.DeleteDirectory(Path.Combine(audioFolder, groupName));
+            FileManager.DeleteDirectory(Path.Combine(wordImageFolder, groupName));
             LoadDropdown();
             if (groupList.Count > 0)
             {
@@ -615,7 +637,7 @@ public class PalavraControllerScript : BaseControllerScript
         GameObject obj = Instantiate(itemPrefab, contentGroup.transform, false);
         obj.GetComponentInChildren<TextMeshProUGUI>().text = entry.name;
         obj.name = entry.name;
-        Texture2D texture = await FileManager.LoadImageFromDisk(Path.Combine(wordImageFolder, entry.imageName));
+        Texture2D texture = await FileManager.LoadImageFromDisk(Path.Combine(wordImageFolder, entry.groupName, entry.imageName));
         obj.GetComponentInChildren<RawImage>().texture = texture;
     }
 
